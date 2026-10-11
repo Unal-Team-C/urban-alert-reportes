@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T022
+tarea_actual: T023
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T022: infra/routes con ANY /api/v1/reportes y ANY /api/v1/reportes/{proxy+} (NONE) + pruebas.
+T023: copiar scripts de Usuarios + comprobación del bus en check-platform.sh.
 
 ## Contexto de trabajo
 

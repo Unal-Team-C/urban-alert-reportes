@@ -88,3 +88,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T022 hecha
 - Stack routes: ANY /api/v1/reportes → /api/v1/Reportes y ANY /api/v1/reportes/{proxy+} → /api/v1/Reportes/$request.path.proxy, NONE, integration_method ANY; sin overwrite:querystring. 7/7 tests; fmt -check limpio en infra/.
+
+## 2026-10-11 · 001-migracion-aws · T023 hecha
+- Scripts copiados de Usuarios (buscar-listener-express, run-schema-task, diagnose-service + test-buscar-listener); check-platform.sh añade la comprobación del bus (ARN de infra/base/terraform.tfvars o argumento) con mensajes para inexistente y AccessDenied (política D-016). test-check-platform 6/6, test-buscar-listener 3/3, shellcheck limpio.
