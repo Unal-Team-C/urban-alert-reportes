@@ -91,3 +91,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T023 hecha
 - Scripts copiados de Usuarios (buscar-listener-express, run-schema-task, diagnose-service + test-buscar-listener); check-platform.sh añade la comprobación del bus (ARN de infra/base/terraform.tfvars o argumento) con mensajes para inexistente y AccessDenied (política D-016). test-check-platform 6/6, test-buscar-listener 3/3, shellcheck limpio.
+
+## 2026-10-11 · 001-migracion-aws · T024 hecha
+- smoke-gateway-reportes.sh (lista con página, query string reenviada, catálogo por {proxy+}, 404 del servicio con problem details vs 404 del gateway para /health, /scalar/v1, /openapi/v1.json, /api/v1/reportes-x, /api/v1/Reportes) + test-smoke 4/4; formas de respuesta comprobadas contra el servicio real. shellcheck limpio.

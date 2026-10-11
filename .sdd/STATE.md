@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T023
+tarea_actual: T024
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T023: copiar scripts de Usuarios + comprobación del bus en check-platform.sh.
+T024: scripts/smoke-gateway-reportes.sh + scripts/tests/test-smoke.sh.
 
 ## Contexto de trabajo
 
