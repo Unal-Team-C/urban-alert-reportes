@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 using Amazon.EventBridge;
 using Amazon.Runtime;
+using Amazon.Runtime.Credentials;
+using AwsSignatureVersion4;
 using Application.Comun;
 using Application.Interfaces.Eventos;
 using Application.Interfaces.Geoespacial;
@@ -45,11 +47,24 @@ public static class DependencyInjection
         // Timeout corto: la llamada es síncrona dentro de la creación del reporte.
         int timeoutSegundos = configuration.GetValue<int?>("Geoespacial:TimeoutSegundos") ?? 3;
 
-        services.AddHttpClient<IGeoespacialClient, GeoespacialHttpClient>(client =>
+        string ruta = configuration["Geoespacial:RutaCoordenadas"] is { Length: > 0 } r ? r.TrimStart('/') : GeoespacialOpciones.RutaPorDefecto;
+        services.AddSingleton(new GeoespacialOpciones(ruta));
+
+        IHttpClientBuilder cliente = services.AddHttpClient<IGeoespacialClient, GeoespacialHttpClient>(client =>
         {
             client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
             client.Timeout = TimeSpan.FromSeconds(timeoutSegundos);
         });
+
+        // En AWS la ruta de asignación del API Gateway exige firma IAM (SigV4) con el rol de tarea.
+        string? regionFirma = configuration["Geoespacial:FirmaIam:Region"];
+        if (!string.IsNullOrWhiteSpace(regionFirma))
+        {
+            cliente.AddHttpMessageHandler(sp => new AwsSignatureHandler(new AwsSignatureHandlerSettings(
+                regionFirma,
+                "execute-api",
+                sp.GetService<AWSCredentials>() ?? DefaultAWSCredentialsIdentityResolver.GetCredentials())));
+        }
     }
 
     private static void AgregarMultimedia(IServiceCollection services, IConfiguration configuration)

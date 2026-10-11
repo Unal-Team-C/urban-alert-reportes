@@ -61,3 +61,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T010 hecha
 - EventBridgeEventPublisher (FailedEntryCount>0 → InvalidOperationException) + Mensajeria:Transporte (RabbitMq por defecto | EventBridge; otro valor → error). AWSCredentials de DI si existen (pruebas), si no la cadena por defecto. EventBridgeEventPublisherTests 3/3; queda solo el fallo esperado de T011.
+
+## 2026-10-11 · 001-migracion-aws · T011 hecha
+- GeoespacialOpciones(RutaCoordenadas) + AwsSignatureHandler si Geoespacial:FirmaIam:Region (credenciales: AWSCredentials de DI o DefaultAWSCredentialsIdentityResolver). UnitTests 85/85.

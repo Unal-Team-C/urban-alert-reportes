@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T010
+tarea_actual: T011
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T010: EventBridgeEventPublisher + Mensajeria:Transporte en DependencyInjection; verificar EventBridgeEventPublisherTests.
+T011: Geoespacial:RutaCoordenadas y Geoespacial:FirmaIam:Region (AwsSignatureHandler) en DependencyInjection/GeoespacialHttpClient.
 
 ## Contexto de trabajo
 
