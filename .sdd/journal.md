@@ -40,3 +40,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T003 hecha
 - infra/bootstrap/README.md (recursos reutilizados, política nueva D-016 con comandos, GitHub, requisitos) y github-reportes-policy.json (json válido).
+
+## 2026-10-11 · 001-migracion-aws · T004 hecha
+- infra/INVENTARIO.md con los 3 stacks, arranque (incluida la política nueva) y externos (bus, rutas de Geoespacial/Multimedia, roles de Geoespacial).
