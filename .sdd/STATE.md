@@ -6,13 +6,13 @@
      estado_tarea: - | en_progreso | hecha | bloqueada -->
 
 feature_activa: 001-migracion-aws
-fase: clarify
+fase: plan
 tarea_actual: -
 estado_tarea: -
 
 ## Siguiente paso
 
-Pedir aprobación de la spec (estado `aclarada`); con `Estado: aprobada` pasar a `/sdd-plan` (base: plan de Usuarios 001).
+Pedir aprobación de specs/001-migracion-aws/plan.md (borrador completo). Aprobado → `/sdd-tasks` (base: tasks.md de Usuarios). Arranque pendiente del usuario: política D-016 + AWS_ROLE_ARN/AWS_REGION en GitHub.
 
 ## Contexto de trabajo
 
@@ -24,4 +24,6 @@ Pedir aprobación de la spec (estado `aclarada`); con `Estado: aprobada` pasar a
 
 ## Bloqueos / preguntas abiertas
 
-- Aprobación de la spec (usuario).
+- ninguno
+- Las IT NO usan Testcontainers (README desactualizado): piden PostgreSQL y RabbitMQ reales por User Secrets/entorno (Development). En CI: service containers.
+- IAM: solo falta `events:DescribeEventBus` (comprobación del bus); task role con `events:PutEvents` lo cubre `iam:PutRolePolicy` existente.

@@ -1,7 +1,7 @@
 # Especificación: Migración del Servicio de Reportes a AWS
 
 - **ID**: 001-migracion-aws
-- **Estado**: aclarada <!-- borrador | aclarada | aprobada | implementada -->
+- **Estado**: aprobada <!-- borrador | aclarada | aprobada | implementada -->
 - **Creada**: 2026-10-11
 - **Entrada original**: "Ok now we must migrate the service to aws, follow the README in urban-alert/infrastructure. This service must be migrated to an ECS express mode and database must have its own postgres instance. Multimedia, geoespacial and the network itself (check the urban-alert-plataforma repo in the aws migration folder) to understand how it's deployed. There is already a deployed amazon event bridge that replaces the rabbitmq" + "No repo has the event bus as someone deployed it manually". Fuentes en `fuentes/`: README de `UrbanAlert/infrastructure` (rutas y aislamiento locales), README y guía de integración de `urban-alert-plataforma`. Referencias de práctica: `urban-alert-geoespacial` (spec 002), `urban-alert-usuarios` (spec 001), `Urban-Alert-multimedia` (spec 002).
 

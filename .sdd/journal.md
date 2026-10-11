@@ -18,3 +18,11 @@
 ## 2026-10-11 · 001-migracion-aws · Clarificaciones
 - Bus: `arn:aws:events:us-east-2:348364742283:event-bus/urban-alert-bus-eventos`. Evento: source `urban-alert.reportes`, detail-type `ReporteCreado`, detail = ReporteCreadoEvent JSON (enums como códigos).
 - Rutas: todas públicas, como en local. Lectura de Auditoria sobre la base: fuera de alcance. Spec en estado `aclarada`.
+
+## 2026-10-11 · 001-migracion-aws · Spec aprobada
+- Aprobada por el usuario. Pregunta sobre IAM: las políticas existentes del rol de workflows no tienen ninguna acción `events:*`; solo hace falta `events:DescribeEventBus` sobre el bus para comprobar que existe (RF-022). El rol de tarea con `events:PutEvents` lo crea Terraform con `iam:PutRolePolicy`, ya permitido.
+
+## 2026-10-11 · 001-migracion-aws · Plan (borrador)
+- 3 stacks como Usuarios; migración con la misma imagen (`API.dll --migrar`, D-002/D-003); rol de tarea con `execute-api:Invoke` (POST coordinates) + `events:PutEvents` (bus) (D-004).
+- Código por configuración: SigV4 con `AwsSignatureVersion4` 5.1.0 (D-005, riesgo de compatibilidad con AWSSDK.Core 4 → plan B propio), Multimedia `Modo=Gateway` (D-006), `EventBridgeEventPublisher` con AWSSDK.EventBridge 4.0.101.2 (D-007), logs JSON + HttpLogging (D-008).
+- Rutas `ANY /api/v1/reportes` y `ANY /api/v1/reportes/{proxy+}` públicas (D-012). Política de arranque nueva `github-actions-urban-alert-reportes` solo con `events:DescribeEventBus` (D-016). IT en CI con service containers (D-017).
