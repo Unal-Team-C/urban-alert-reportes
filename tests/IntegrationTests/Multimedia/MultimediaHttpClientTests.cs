@@ -114,6 +114,99 @@ public class MultimediaHttpClientTests
                 new MemoryStream([1, 2, 3]), 3, "foto.png", "image/png", null, null, CancellationToken.None));
     }
 
+    // Modo Gateway (AWS): la petición va por el API Gateway compartido como multipart normal y la
+    // respuesta es la HTTP de Multimedia, sin el sobre del Runtime Interface Emulator.
+
+    [Fact]
+    public async Task Gateway_SubirImagenAsync_EnviaMultipartAlGatewayYDevuelveLaUrl()
+    {
+        ManejadorFalso manejador = new(_ =>
+            Respuesta(HttpStatusCode.Created, ImagenSubida("https://imagenes.s3.us-east-2.amazonaws.com/foo.png")));
+
+        string url = await CrearClienteGateway(manejador).SubirImagenAsync(
+            new MemoryStream([1, 2, 3]), 3, "foto.png", "image/png", 4.6512, -74.0561, CancellationToken.None);
+
+        Assert.Equal("https://imagenes.s3.us-east-2.amazonaws.com/foo.png", url);
+        Assert.Equal(HttpMethod.Post, manejador.UltimaSolicitud!.Method);
+        Assert.Equal("https://gateway.test/api/v1/multimedia/images", manejador.UltimaSolicitud.RequestUri!.ToString());
+        Assert.Equal("multipart/form-data", manejador.UltimaSolicitud.Content!.Headers.ContentType!.MediaType);
+        Assert.Contains("name=\"lat\"", manejador.UltimoCuerpo);
+        Assert.Contains("4.6512", manejador.UltimoCuerpo);
+        Assert.Contains("name=\"lon\"", manejador.UltimoCuerpo);
+        Assert.Contains("name=\"image\"; filename=\"foto.png\"", manejador.UltimoCuerpo);
+        Assert.Contains("Content-Type: image/png", manejador.UltimoCuerpo);
+    }
+
+    [Fact]
+    public async Task Gateway_SubirImagenAsync_NoEnviaCoordenadas_SiNoLlegan()
+    {
+        ManejadorFalso manejador = new(_ => Respuesta(HttpStatusCode.Created, ImagenSubida("https://x/foo.png")));
+
+        await CrearClienteGateway(manejador).SubirImagenAsync(
+            new MemoryStream([1, 2, 3]), 3, "foto.png", "image/png", null, null, CancellationToken.None);
+
+        Assert.DoesNotContain("name=\"lat\"", manejador.UltimoCuerpo);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest)]
+    [InlineData(HttpStatusCode.RequestEntityTooLarge)]
+    [InlineData(HttpStatusCode.UnsupportedMediaType)]
+    public async Task Gateway_SubirImagenAsync_LanzaImagenInvalida_SiMultimediaRechazaLaImagen(HttpStatusCode codigo)
+    {
+        ManejadorFalso manejador = new(_ => Respuesta(codigo, """{"code":415,"message":"Unsupported image format"}"""));
+
+        ImagenInvalidaException ex = await Assert.ThrowsAsync<ImagenInvalidaException>(
+            () => CrearClienteGateway(manejador).SubirImagenAsync(
+                new MemoryStream([1, 2, 3]), 3, "foto.png", "image/png", null, null, CancellationToken.None));
+
+        Assert.Contains("Unsupported image format", ex.Message);
+    }
+
+    [Fact]
+    public async Task Gateway_SubirImagenAsync_LanzaImagenInvalida_SiElGatewayRechazaElTamano()
+    {
+        // El gateway corta las peticiones de más de 10 MB con un cuerpo que no es el JSON de Multimedia.
+        ManejadorFalso manejador = new(_ => new HttpResponseMessage(HttpStatusCode.RequestEntityTooLarge)
+        {
+            Content = new StringContent("Request Entity Too Large")
+        });
+
+        ImagenInvalidaException ex = await Assert.ThrowsAsync<ImagenInvalidaException>(
+            () => CrearClienteGateway(manejador).SubirImagenAsync(
+                new MemoryStream([1, 2, 3]), 3, "foto.png", "image/png", null, null, CancellationToken.None));
+
+        Assert.Equal("La imagen no es válida.", ex.Message);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.InternalServerError)]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
+    [InlineData(HttpStatusCode.Created)]
+    public async Task Gateway_SubirImagenAsync_LanzaNoDisponible_SiMultimediaFallaOResponde201SinUrl(HttpStatusCode codigo)
+    {
+        ManejadorFalso manejador = new(_ => Respuesta(codigo, """{"code":503,"message":"Service unavailable"}"""));
+
+        await Assert.ThrowsAsync<MultimediaNoDisponibleException>(
+            () => CrearClienteGateway(manejador).SubirImagenAsync(
+                new MemoryStream([1, 2, 3]), 3, "foto.png", "image/png", null, null, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Gateway_SubirImagenAsync_LanzaNoDisponible_SiNoHayConexion()
+    {
+        ManejadorFalso manejador = new(_ => throw new HttpRequestException("Connection refused"));
+
+        await Assert.ThrowsAsync<MultimediaNoDisponibleException>(
+            () => CrearClienteGateway(manejador).SubirImagenAsync(
+                new MemoryStream([1, 2, 3]), 3, "foto.png", "image/png", null, null, CancellationToken.None));
+    }
+
+    private static MultimediaHttpClient CrearClienteGateway(ManejadorFalso manejador) =>
+        new(new HttpClient(manejador) { BaseAddress = new Uri("https://gateway.test/") },
+            NullLogger<MultimediaHttpClient>.Instance,
+            new MultimediaOpciones(ModoMultimedia.Gateway));
+
     private static MultimediaHttpClient CrearCliente(ManejadorFalso manejador) =>
         new(new HttpClient(manejador) { BaseAddress = new Uri("http://multimedia.test/") },
             NullLogger<MultimediaHttpClient>.Instance);

@@ -1,0 +1,238 @@
+# Provisioning (spec 001-migracion-aws, RF-017): every push to main tests, provisions and deploys.
+# Order (plan §7): tests → platform and bus check → base → image → migration task → service → listener →
+# routes → smoke. The service runs in the private network of the shared platform
+# (Unal-Team-C/urban-alert-plataforma) and is reachable only through its API Gateway.
+name: Provision
+
+on:
+  push:
+    branches: [main]
+
+# Shared with deprovision.yml: runs touching the same infrastructure queue up instead of overlapping (RF-019).
+concurrency:
+  group: urban-alert-reportes-aws
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  TF_VERSION: 1.16.5
+  TF_IN_AUTOMATION: "true"
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+
+jobs:
+  test:
+    name: Tests and static checks
+    runs-on: ubuntu-latest
+    # The integration tests use a real PostgreSQL and RabbitMQ (plan D-017). Throwaway containers of this job:
+    # the credentials below open nothing outside the runner.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: urbanalert
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: urbanalert_reportes
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U urbanalert" --health-interval 5s --health-timeout 5s --health-retries 10
+      rabbitmq:
+        image: rabbitmq:4-alpine
+        env:
+          RABBITMQ_DEFAULT_USER: urbanalert
+          RABBITMQ_DEFAULT_PASS: ci-only
+        ports: ["5672:5672"]
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping" --health-interval 10s --health-timeout 10s --health-retries 10
+    env:
+      ConnectionStrings__Postgres: Host=localhost;Port=5432;Database=urbanalert_reportes;Username=urbanalert;Password=ci-only
+      RabbitMq__Host: localhost
+      RabbitMq__Username: urbanalert
+      RabbitMq__Password: ci-only
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build UrbanAlert.Reportes.slnx -c Release
+
+      # The test fixtures migrate the database on startup (Development) and race on an empty one: migrating once
+      # first avoids it, and runs the same --migrar mode the cloud migration task uses.
+      - name: Migrate the test database (--migrar mode)
+        env:
+          Migracion__Host: localhost
+          Migracion__Base: urbanalert_reportes
+          Migracion__UsuarioAdmin: urbanalert
+          Migracion__ContrasenaAdmin: ci-only
+          Migracion__SslMode: Disable
+          Migracion__UsuarioApp: reportes_app_ci
+          Migracion__ContrasenaApp: ci-only
+        run: dotnet run --project src/API/API.csproj -c Release --no-build -- --migrar
+
+      - name: Unit and integration tests
+        run: dotnet test UrbanAlert.Reportes.slnx -c Release --no-build
+
+      - name: Script tests
+        run: |
+          bash scripts/tests/test-check-platform.sh
+          bash scripts/tests/test-buscar-listener.sh
+          bash scripts/tests/test-smoke.sh
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Terraform format
+        run: terraform fmt -check -recursive infra
+
+      - name: Terraform validate and test (mocked providers)
+        run: |
+          for stack in base service routes; do
+            terraform -chdir="infra/$stack" init -backend=false -input=false -lockfile=readonly
+            terraform -chdir="infra/$stack" validate
+            terraform -chdir="infra/$stack" test
+          done
+
+      - name: Lint workflows
+        run: docker run --rm -v "$PWD:/repo" -w /repo docker.io/rhysd/actionlint:1.7.7 -color
+
+      - name: Lint scripts
+        run: docker run --rm -v "$PWD:/mnt" -w /mnt docker.io/koalaman/shellcheck:v0.10.0 scripts/*.sh scripts/tests/*.sh
+
+  provision:
+    name: Provision and deploy
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC: temporary AWS credentials, no stored keys (RF-019)
+    env:
+      IMAGE_TAG: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Check the shared platform and the EventBridge bus exist (nothing is changed before this)
+        run: scripts/check-platform.sh
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Apply base (ECR, roles, security groups, RDS, secret, logs, migration task)
+        run: |
+          terraform -chdir=infra/base init -input=false
+          terraform -chdir=infra/base apply -input=false -auto-approve -var "image_tag=$IMAGE_TAG"
+
+      - name: Read base outputs
+        id: base
+        run: |
+          out() { terraform -chdir=infra/base output -raw "$1"; }
+          {
+            echo "name=$(out name)"
+            echo "ecr_url=$(out ecr_repository_url)"
+            echo "cluster=$(out cluster_name)"
+            echo "migrate_task=$(out migrate_task_definition_arn)"
+            echo "migrate_container=$(out migrate_container_name)"
+            echo "migrate_log_group=$(out migrate_log_group)"
+            echo "tasks_sg=$(out tasks_security_group_id)"
+            echo "subnets=$(terraform -chdir=infra/base output -json subnet_ids | jq -r 'join(",")')"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image (tag = commit SHA)
+        env:
+          REPOSITORY: ${{ steps.base.outputs.name }}
+          IMAGE: ${{ steps.base.outputs.ecr_url }}:${{ env.IMAGE_TAG }}
+        run: |
+          # Tags are immutable: a re-run of the same commit reuses the image already pushed.
+          if aws ecr describe-images --repository-name "$REPOSITORY" --image-ids "imageTag=$IMAGE_TAG" >/dev/null 2>&1; then
+            echo "Image $IMAGE already exists, skipping build."
+          else
+            docker build --platform linux/amd64 -f deploy/docker/Dockerfile -t "$IMAGE" .
+            docker push "$IMAGE"
+          fi
+
+      - name: Apply database migrations (one-off ECS task in the private subnets)
+        env:
+          CLUSTER: ${{ steps.base.outputs.cluster }}
+          TASK_DEFINITION: ${{ steps.base.outputs.migrate_task }}
+          SUBNETS: ${{ steps.base.outputs.subnets }}
+          SECURITY_GROUP: ${{ steps.base.outputs.tasks_sg }}
+          LOG_GROUP: ${{ steps.base.outputs.migrate_log_group }}
+          CONTAINER: ${{ steps.base.outputs.migrate_container }}
+        run: scripts/run-schema-task.sh
+
+      - name: Apply service (ECS Express Mode, internal load balancer)
+        id: service
+        run: |
+          terraform -chdir=infra/service init -input=false
+          terraform -chdir=infra/service apply -input=false -auto-approve -var "image_tag=$IMAGE_TAG"
+          {
+            echo "endpoint=$(terraform -chdir=infra/service output -raw service_endpoint)"
+            echo "cluster=$(terraform -chdir=infra/service output -raw cluster_name)"
+            echo "name=$(terraform -chdir=infra/service output -raw service_name)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Diagnose the service deployment (only when it failed)
+        if: failure() && steps.base.outcome == 'success'
+        env:
+          CLUSTER: ${{ steps.base.outputs.cluster }}
+          SERVICE: ${{ steps.base.outputs.name }}
+        run: scripts/diagnose-service.sh "$CLUSTER" "$SERVICE" "/ecs/$SERVICE"
+
+      - name: Find the 443 listener of the Express load balancer
+        id: listener
+        env:
+          CLUSTER: ${{ steps.service.outputs.cluster }}
+          SERVICE: ${{ steps.service.outputs.name }}
+          ENDPOINT: ${{ steps.service.outputs.endpoint }}
+        run: |
+          # Assigning first makes the step fail when the script fails (a failing $(...) inside echo would not).
+          arn="$(scripts/buscar-listener-express.sh "$CLUSTER" "$SERVICE" "$ENDPOINT")"
+          echo "Listener: $arn"
+          echo "arn=$arn" >> "$GITHUB_OUTPUT"
+
+      - name: Apply routes in the shared API Gateway
+        id: routes
+        env:
+          ENDPOINT: ${{ steps.service.outputs.endpoint }}
+          LISTENER: ${{ steps.listener.outputs.arn }}
+        run: |
+          terraform -chdir=infra/routes init -input=false
+          terraform -chdir=infra/routes apply -input=false -auto-approve \
+            -var "express_endpoint=$ENDPOINT" -var "express_listener_arn=$LISTENER"
+          echo "gateway=$(terraform -chdir=infra/routes output -raw gateway_url)" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test through the gateway (read-only)
+        env:
+          GATEWAY: ${{ steps.routes.outputs.gateway }}
+        run: scripts/smoke-gateway-reportes.sh "$GATEWAY"
+
+      - name: Summary
+        if: always()
+        env:
+          GATEWAY: ${{ steps.routes.outputs.gateway }}
+        run: |
+          {
+            echo "### Servicio de Reportes"
+            echo "- Commit: \`$IMAGE_TAG\`"
+            if [ -n "$GATEWAY" ]; then
+              echo "- Público: \`$GATEWAY/api/v1/reportes\` y \`$GATEWAY/api/v1/reportes/*\` (todos los métodos)"
+              echo "- Creación completa (Geoespacial, Multimedia, EventBridge): \`scripts/crear-reporte-prueba.sh $GATEWAY\`"
+            else
+              echo "- Rutas del gateway: (no disponibles)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

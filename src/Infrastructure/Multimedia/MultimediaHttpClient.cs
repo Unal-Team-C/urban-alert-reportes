@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -9,17 +10,34 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Multimedia;
 
+public enum ModoMultimedia
+{
+    // Local: el Runtime Interface Emulator del contenedor de Multimedia.
+    Emulador,
+
+    // AWS: la ruta pública POST /api/v1/multimedia/images del API Gateway compartido.
+    Gateway
+}
+
+public sealed record MultimediaOpciones(ModoMultimedia Modo);
+
 // Multimedia corre como función Lambda (Python + FastAPI, Mangum). En AWS, API Gateway traduce la
-// petición HTTP al evento que recibe Lambda; en local, sin API Gateway, el Runtime Interface
-// Emulator del propio contenedor expone /2015-03-31/functions/function/invocations y espera
-// directamente ese evento (API Gateway HTTP API, payload 2.0) con el cuerpo en base64 — igual que
-// scripts/invoke-upload.sh del servicio Multimedia construye a mano.
-public class MultimediaHttpClient(HttpClient httpClient, ILogger<MultimediaHttpClient> logger) : IMultimediaClient
+// petición HTTP al evento que recibe Lambda, así que Reportes envía un multipart normal (modo Gateway).
+// En local, sin API Gateway, el Runtime Interface Emulator del propio contenedor expone
+// /2015-03-31/functions/function/invocations y espera directamente ese evento (API Gateway HTTP API,
+// payload 2.0) con el cuerpo en base64 — igual que scripts/invoke-upload.sh del servicio Multimedia
+// construye a mano (modo Emulador). Las respuestas de Multimedia se interpretan igual en los dos modos.
+public class MultimediaHttpClient(
+    HttpClient httpClient,
+    ILogger<MultimediaHttpClient> logger,
+    MultimediaOpciones? opciones = null) : IMultimediaClient
 {
     private const string RutaInvocacion = "2015-03-31/functions/function/invocations";
     private const string RutaSubida = "/api/v1/multimedia/images";
 
     private static readonly JsonSerializerOptions OpcionesJson = new(JsonSerializerDefaults.Web);
+
+    private readonly ModoMultimedia _modo = opciones?.Modo ?? ModoMultimedia.Emulador;
 
     public async Task<string> SubirImagenAsync(
         Stream contenido,
@@ -33,6 +51,28 @@ public class MultimediaHttpClient(HttpClient httpClient, ILogger<MultimediaHttpC
         (byte[] cuerpo, string boundary) = await ConstruirMultipartAsync(
             contenido, nombreArchivo, tipoContenido, latitud, longitud, cancellationToken);
 
+        (int statusCode, string? cuerpoJson) = _modo == ModoMultimedia.Gateway
+            ? await EnviarPorGatewayAsync(cuerpo, boundary, cancellationToken)
+            : await InvocarEmuladorAsync(cuerpo, boundary, cancellationToken);
+
+        return Interpretar(statusCode, cuerpoJson);
+    }
+
+    private async Task<(int StatusCode, string? Cuerpo)> EnviarPorGatewayAsync(
+        byte[] cuerpo, string boundary, CancellationToken cancellationToken)
+    {
+        ByteArrayContent contenido = new(cuerpo);
+        contenido.Headers.ContentType = MediaTypeHeaderValue.Parse($"multipart/form-data; boundary={boundary}");
+
+        using HttpResponseMessage respuesta = await EnviarAsync(
+            () => httpClient.PostAsync(RutaSubida.TrimStart('/'), contenido, cancellationToken), cancellationToken);
+
+        return ((int)respuesta.StatusCode, await respuesta.Content.ReadAsStringAsync(cancellationToken));
+    }
+
+    private async Task<(int StatusCode, string? Cuerpo)> InvocarEmuladorAsync(
+        byte[] cuerpo, string boundary, CancellationToken cancellationToken)
+    {
         object evento = new
         {
             Version = "2.0",
@@ -68,10 +108,36 @@ public class MultimediaHttpClient(HttpClient httpClient, ILogger<MultimediaHttpC
             IsBase64Encoded = true
         };
 
-        HttpResponseMessage respuesta;
+        using HttpResponseMessage respuesta = await EnviarAsync(
+            () => httpClient.PostAsJsonAsync(RutaInvocacion, evento, cancellationToken), cancellationToken);
+
+        if (!respuesta.IsSuccessStatusCode)
+        {
+            string cuerpoError = await respuesta.Content.ReadAsStringAsync(cancellationToken);
+            logger.LogWarning(
+                "El invocador de Multimedia respondió {StatusCode} al subir una imagen: {Cuerpo}",
+                (int)respuesta.StatusCode, cuerpoError);
+            throw new MultimediaNoDisponibleException(
+                $"El servicio Multimedia no pudo recibir la invocación (HTTP {(int)respuesta.StatusCode}).");
+        }
+
+        InvocationResponse? invocacion = await respuesta.Content.ReadFromJsonAsync<InvocationResponse>(OpcionesJson, cancellationToken);
+        if (invocacion is null)
+            throw new MultimediaNoDisponibleException("El servicio Multimedia devolvió una respuesta vacía.");
+
+        string? cuerpoJson = invocacion.IsBase64Encoded && invocacion.Body is not null
+            ? Encoding.UTF8.GetString(Convert.FromBase64String(invocacion.Body))
+            : invocacion.Body;
+
+        return (invocacion.StatusCode, cuerpoJson);
+    }
+
+    private static async Task<HttpResponseMessage> EnviarAsync(
+        Func<Task<HttpResponseMessage>> enviar, CancellationToken cancellationToken)
+    {
         try
         {
-            respuesta = await httpClient.PostAsJsonAsync(RutaInvocacion, evento, cancellationToken);
+            return await enviar();
         }
         catch (HttpRequestException ex)
         {
@@ -81,48 +147,31 @@ public class MultimediaHttpClient(HttpClient httpClient, ILogger<MultimediaHttpC
         {
             throw new MultimediaNoDisponibleException("El servicio Multimedia no respondió a tiempo.", ex);
         }
+    }
 
-        using (respuesta)
+    private string Interpretar(int statusCode, string? cuerpoJson)
+    {
+        if (statusCode == 201)
         {
-            if (!respuesta.IsSuccessStatusCode)
-            {
-                string cuerpoError = await respuesta.Content.ReadAsStringAsync(cancellationToken);
-                logger.LogWarning(
-                    "El invocador de Multimedia respondió {StatusCode} al subir una imagen: {Cuerpo}",
-                    (int)respuesta.StatusCode, cuerpoError);
-                throw new MultimediaNoDisponibleException(
-                    $"El servicio Multimedia no pudo recibir la invocación (HTTP {(int)respuesta.StatusCode}).");
-            }
+            UploadImageResponse? subida = DeserializarSeguro<UploadImageResponse>(cuerpoJson);
+            if (subida is null || string.IsNullOrWhiteSpace(subida.ImageUrl))
+                throw new MultimediaNoDisponibleException("El servicio Multimedia devolvió una respuesta sin la URL de la imagen.");
 
-            InvocationResponse? invocacion = await respuesta.Content.ReadFromJsonAsync<InvocationResponse>(OpcionesJson, cancellationToken);
-            if (invocacion is null)
-                throw new MultimediaNoDisponibleException("El servicio Multimedia devolvió una respuesta vacía.");
-
-            string? cuerpoJson = invocacion.IsBase64Encoded && invocacion.Body is not null
-                ? Encoding.UTF8.GetString(Convert.FromBase64String(invocacion.Body))
-                : invocacion.Body;
-
-            if (invocacion.StatusCode == 201)
-            {
-                UploadImageResponse? subida = DeserializarSeguro<UploadImageResponse>(cuerpoJson);
-                if (subida is null || string.IsNullOrWhiteSpace(subida.ImageUrl))
-                    throw new MultimediaNoDisponibleException("El servicio Multimedia devolvió una respuesta sin la URL de la imagen.");
-
-                return subida.ImageUrl;
-            }
-
-            if (invocacion.StatusCode is 400 or 413 or 415)
-            {
-                ErrorResponse? error = DeserializarSeguro<ErrorResponse>(cuerpoJson);
-                string? motivo = error?.Details?.FirstOrDefault()?.Reason ?? error?.Message;
-                throw new ImagenInvalidaException(
-                    motivo is null ? "La imagen no es válida." : $"La imagen no es válida: {motivo}");
-            }
-
-            logger.LogWarning("Multimedia respondió {StatusCode} al subir una imagen: {Cuerpo}", invocacion.StatusCode, cuerpoJson);
-            throw new MultimediaNoDisponibleException(
-                $"El servicio Multimedia no pudo guardar la imagen (HTTP {invocacion.StatusCode}).");
+            return subida.ImageUrl;
         }
+
+        // 413 también lo da el propio API Gateway (más de 10 MB), con un cuerpo que no es el de Multimedia.
+        if (statusCode is 400 or 413 or 415)
+        {
+            ErrorResponse? error = DeserializarSeguro<ErrorResponse>(cuerpoJson);
+            string? motivo = error?.Details?.FirstOrDefault()?.Reason ?? error?.Message;
+            throw new ImagenInvalidaException(
+                motivo is null ? "La imagen no es válida." : $"La imagen no es válida: {motivo}");
+        }
+
+        logger.LogWarning("Multimedia respondió {StatusCode} al subir una imagen: {Cuerpo}", statusCode, cuerpoJson);
+        throw new MultimediaNoDisponibleException(
+            $"El servicio Multimedia no pudo guardar la imagen (HTTP {statusCode}).");
     }
 
     // multipart/form-data a mano: lat/lon (datos de captura, opcionales) y el archivo de imagen.

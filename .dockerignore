@@ -1,0 +1,15 @@
+# Contexto de build: solo src/ hace falta (deploy/docker/Dockerfile).
+.git
+.github
+.sdd
+.claude
+specs
+infra
+scripts
+tests
+docs
+**/bin
+**/obj
+**/.DS_Store
+**/*.user
+deploy/docker/.env

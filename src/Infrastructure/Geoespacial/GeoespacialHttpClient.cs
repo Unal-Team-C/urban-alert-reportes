@@ -6,12 +6,21 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Geoespacial;
 
+public sealed record GeoespacialOpciones(string RutaCoordenadas)
+{
+    // Ruta del servicio (local). En AWS se llama por el API Gateway: api/v1/geoespacial/coordinates.
+    public const string RutaPorDefecto = "api/v1/geospatial/coordinates";
+}
+
 // Contrato de Geoespacial: POST /api/v1/geospatial/coordinates (JSON en camelCase).
 // 201 = asignación nueva, 200 = repetición idéntica, 400 = coordenada inválida,
 // 409 = el reporte ya tiene otra coordenada, 503 = base de datos no disponible.
-public class GeoespacialHttpClient(HttpClient httpClient, ILogger<GeoespacialHttpClient> logger) : IGeoespacialClient
+public class GeoespacialHttpClient(
+    HttpClient httpClient,
+    ILogger<GeoespacialHttpClient> logger,
+    GeoespacialOpciones? opciones = null) : IGeoespacialClient
 {
-    private const string RutaCoordenadas = "api/v1/geospatial/coordinates";
+    private readonly string _rutaCoordenadas = opciones?.RutaCoordenadas ?? GeoespacialOpciones.RutaPorDefecto;
 
     public async Task<Guid> AsignarCoordenadaAsync(
         Guid idReporte, double latitud, double longitud, CancellationToken cancellationToken)
@@ -21,7 +30,7 @@ public class GeoespacialHttpClient(HttpClient httpClient, ILogger<GeoespacialHtt
 
         try
         {
-            respuesta = await httpClient.PostAsJsonAsync(RutaCoordenadas, solicitud, cancellationToken);
+            respuesta = await httpClient.PostAsJsonAsync(_rutaCoordenadas, solicitud, cancellationToken);
         }
         catch (HttpRequestException ex)
         {
