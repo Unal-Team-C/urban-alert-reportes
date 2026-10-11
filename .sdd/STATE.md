@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T020
+tarea_actual: T021
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T020: adaptar infra/base/tests/base.tftest.hcl (connection_string, rol de tarea con 2 acciones, --migrar) y ejecutar $TF test.
+T021: infra/service adaptado (variables de §7 del plan, /health, rol de tarea, ConnectionStrings__Postgres como secreto) + pruebas.
 
 ## Contexto de trabajo
 

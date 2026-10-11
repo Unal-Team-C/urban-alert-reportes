@@ -4,11 +4,9 @@ state_bucket = "urban-alert-tfstate-348364742283"
 cpu               = "512"
 memory            = "1024"
 container_port    = 8080
-health_check_path = "/actuator/health"
+health_check_path = "/health"
 
 min_tasks          = 1
 max_tasks          = 5
 cpu_target_percent = 60
 
-db_pool_min = 2
-db_pool_max = 8

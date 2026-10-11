@@ -82,3 +82,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T020 hecha
 - base.tftest.hcl adaptado: rol de tarea con exactamente 2 permisos (Invoke sobre la ruta exacta, PutEvents sobre el bus), connection_string (TLS, base/usuario de la app, pool 8), migración --migrar como maestro, validación del ARN del bus. 13/13 en verde; lock de Usuarios válido con -lockfile=readonly.
+
+## 2026-10-11 · 001-migracion-aws · T021 hecha
+- Stack service: task_role_arn (existe en el recurso Express, comprobado en el esquema del proveedor), entorno de §7 con dynamic environment (api-endpoint de SSM), secreto ConnectionStrings__Postgres = connection_string, /health, precondición con db_pool_max de base × max_tasks ≤ 50, shutdown_timeout_seconds validado (<30). validate + 7/7 tests en verde.
