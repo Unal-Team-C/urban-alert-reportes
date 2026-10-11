@@ -76,6 +76,11 @@ public static class DependencyInjection
         // Timeout más alto que Geoespacial: incluye subir el archivo, no solo una consulta.
         int timeoutSegundos = configuration.GetValue<int?>("Multimedia:TimeoutSegundos") ?? 10;
 
+        string modo = configuration["Multimedia:Modo"] ?? nameof(ModoMultimedia.Emulador);
+        if (!Enum.TryParse(modo, ignoreCase: true, out ModoMultimedia modoMultimedia))
+            throw new InvalidOperationException($"'Multimedia:Modo' no admite '{modo}' (Emulador | Gateway).");
+        services.AddSingleton(new MultimediaOpciones(modoMultimedia));
+
         services.AddHttpClient<IMultimediaClient, MultimediaHttpClient>(client =>
         {
             client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");

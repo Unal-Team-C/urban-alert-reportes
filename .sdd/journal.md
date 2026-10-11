@@ -64,3 +64,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T011 hecha
 - GeoespacialOpciones(RutaCoordenadas) + AwsSignatureHandler si Geoespacial:FirmaIam:Region (credenciales: AWSCredentials de DI o DefaultAWSCredentialsIdentityResolver). UnitTests 85/85.
+
+## 2026-10-11 · 001-migracion-aws · T012 hecha
+- MultimediaHttpClient: multipart e interpretación comunes, transportes Emulador (sobre RIE) y Gateway (multipart a api/v1/multimedia/images); Multimedia:Modo en DI (valor inválido → error). Clientes Multimedia+Geoespacial 29/29 en verde (se excluyó MigracionNubeTests, que aún no compila; el fallo de CrearReporte_ConArchivo necesita PostgreSQL).

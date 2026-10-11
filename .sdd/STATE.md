@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T011
+tarea_actual: T012
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T011: Geoespacial:RutaCoordenadas y Geoespacial:FirmaIam:Region (AwsSignatureHandler) en DependencyInjection/GeoespacialHttpClient.
+T012: MultimediaHttpClient con modos Emulador | Gateway (MultimediaOpciones, ModoMultimedia); verificar MultimediaHttpClientTests (no necesita base: --filter).
 
 ## Contexto de trabajo
 
