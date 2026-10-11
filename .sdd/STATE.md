@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T007
+tarea_actual: T008
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T007: casos del modo Gateway en tests/IntegrationTests/Multimedia/MultimediaHttpClientTests.cs.
+T008: tests/IntegrationTests/Persistencia/MigracionNubeTests.cs (base temporal + rol único por prueba; MigracionNube.EjecutarAsync(MigracionNubeOpciones(CadenaAdmin, UsuarioApp, ContrasenaApp))).
 
 ## Contexto de trabajo
 
