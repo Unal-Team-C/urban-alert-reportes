@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T026
+tarea_actual: T027
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T026: .github/workflows/provision.yml (job test con services postgres+rabbitmq y --migrar antes de las IT; job provision en el orden de §7).
+T027: .github/workflows/deprovision.yml (confirmación urban-alert-reportes).
 
 ## Contexto de trabajo
 

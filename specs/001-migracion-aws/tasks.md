@@ -54,7 +54,7 @@ Dependencias: cada fase depende de la anterior; dentro de una fase se ejecuta en
 - [x] T024 [P] Prueba de humo por el gateway (D-015) y su prueba con `curl` simulado — archivos: scripts/smoke-gateway-reportes.sh, scripts/tests/test-smoke.sh — cubre: RF-017, RF-021, HU-6 — verifica: `bash scripts/tests/test-smoke.sh` en verde (falla si `/health` llega al servicio); shellcheck sin avisos
 - [x] T025 [P] `crear-reporte-prueba.sh <gateway>`: crea un reporte JSON y otro multipart con una imagen PNG mínima, comprueba `idCoordenada` y que `urlImagen` responde 200, y los borra — archivos: scripts/crear-reporte-prueba.sh — cubre: MS-002, HU-4 — verifica: shellcheck sin avisos; sin argumentos muestra el uso y sale ≠ 0
 - [x] T026 `provision.yml` (push a `main`, `concurrency: urban-alert-reportes-aws`; job `test` con *services* PostgreSQL y RabbitMQ; job `provision` en el orden de §7) — archivos: .github/workflows/provision.yml — cubre: RF-007, RF-017, RF-019, RNF-003, RNF-005 — verifica: actionlint sin errores — depende: T020, T021, T022, T023, T024
-- [ ] T027 `deprovision.yml` (manual, confirmación `urban-alert-reportes`, solo `main`, misma `concurrency`; routes → service → base `allow_destroy` → destroy; tolera estado vacío) — archivos: .github/workflows/deprovision.yml — cubre: RF-018, RF-019, HU-2 — verifica: actionlint sin errores — depende: T026
+- [x] T027 `deprovision.yml` (manual, confirmación `urban-alert-reportes`, solo `main`, misma `concurrency`; routes → service → base `allow_destroy` → destroy; tolera estado vacío) — archivos: .github/workflows/deprovision.yml — cubre: RF-018, RF-019, HU-2 — verifica: actionlint sin errores — depende: T026
 
 ## Fase 5: Pulido
 
