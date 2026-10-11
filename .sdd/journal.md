@@ -106,3 +106,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T028 hecha
 - README (configuración local/AWS, evento, migración, despliegue, rutas, arranque D-016, workflows, costes ~33 USD, validación local; corrige Testcontainers), docs/funcionamiento.md (dependencias por entorno, esquema en AWS) y CLAUDE.md (AWS, validación local, gotchas).
+
+## 2026-10-11 · 001-migracion-aws · T029 hecha
+- Comprobación completa: base nueva + --migrar + IT 75/75 (orden de CI), UnitTests 86/86, Terraform base 13/13, service 7/7, routes 7/7, fmt limpio, pruebas de scripts 3/3, actionlint y shellcheck limpios; búsqueda de secretos: solo nombres, placeholders de .env.example y credenciales desechables de CI.

@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T028
+tarea_actual: T029
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T028: README (AWS: arquitectura, rutas, dependencias, workflows, variables, costes, política D-016; corregir Testcontainers), docs/funcionamiento.md y CLAUDE.md.
+T029: comprobación completa (dotnet unit + IT en base nueva con --migrar previo, Terraform x3, scripts, actionlint, shellcheck, búsqueda de secretos).
 
 ## Contexto de trabajo
 
