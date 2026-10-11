@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T027
+tarea_actual: T028
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T027: .github/workflows/deprovision.yml (confirmación urban-alert-reportes).
+T028: README (AWS: arquitectura, rutas, dependencias, workflows, variables, costes, política D-016; corregir Testcontainers), docs/funcionamiento.md y CLAUDE.md.
 
 ## Contexto de trabajo
 

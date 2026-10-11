@@ -103,3 +103,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T027 hecha
 - deprovision.yml derivado de Usuarios (confirmación urban-alert-reportes, solo main, misma concurrency; routes → service → base allow_destroy → destroy; tolera estados vacíos). actionlint limpio.
+
+## 2026-10-11 · 001-migracion-aws · T028 hecha
+- README (configuración local/AWS, evento, migración, despliegue, rutas, arranque D-016, workflows, costes ~33 USD, validación local; corrige Testcontainers), docs/funcionamiento.md (dependencias por entorno, esquema en AWS) y CLAUDE.md (AWS, validación local, gotchas).
