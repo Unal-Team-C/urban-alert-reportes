@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T006
+tarea_actual: T007
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T006: ampliar FirmaGeoespacialTests con DI (AddInfrastructure + ConfigureHttpClientDefaults con manejador de captura; AWSCredentials registrado en DI para la prueba).
+T007: casos del modo Gateway en tests/IntegrationTests/Multimedia/MultimediaHttpClientTests.cs.
 
 ## Contexto de trabajo
 

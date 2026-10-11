@@ -49,3 +49,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T006 hecha
 - FirmaGeoespacialTests + 2 casos por DI. Esperado: con FirmaIam falla (ruta y firma no configurables aún); sin FirmaIam pasa (comportamiento actual).
+
+## 2026-10-11 · 001-migracion-aws · T007 hecha
+- 8 casos del modo Gateway en MultimediaHttpClientTests (multipart a /api/v1/multimedia/images, 201, 400/413/415, 413 del gateway sin JSON, 5xx/201 sin URL, red). Fallan por compilación (MultimediaOpciones/ModoMultimedia no existen).
