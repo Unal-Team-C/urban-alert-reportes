@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Amazon.Runtime;
+using Application.Interfaces.Eventos;
 using Application.Interfaces.Geoespacial;
 using AwsSignatureVersion4;
 using Infrastructure;
@@ -35,7 +36,10 @@ public class FirmaGeoespacialTests
     private const string Gateway = "https://abc123.execute-api.us-east-2.amazonaws.com";
 
     // Configuración mínima de AddInfrastructure; la cadena de conexión no se usa (no se abre la base).
-    private static IGeoespacialClient ClienteDesdeDi(ManejadorCaptura captura, Dictionary<string, string?> extra)
+    private static IGeoespacialClient ClienteDesdeDi(ManejadorCaptura captura, Dictionary<string, string?> extra) =>
+        ProveedorDesdeDi(captura, extra, conCredenciales: true).GetRequiredService<IGeoespacialClient>();
+
+    private static ServiceProvider ProveedorDesdeDi(ManejadorCaptura captura, Dictionary<string, string?> extra, bool conCredenciales)
     {
         Dictionary<string, string?> valores = new()
         {
@@ -52,11 +56,28 @@ public class FirmaGeoespacialTests
         IConfiguration configuracion = new ConfigurationBuilder().AddInMemoryCollection(valores).Build();
         ServiceCollection servicios = new();
         servicios.AddLogging();
-        servicios.AddSingleton<AWSCredentials>(Credenciales);
+        if (conCredenciales)
+            servicios.AddSingleton<AWSCredentials>(Credenciales);
         servicios.AddInfrastructure(configuracion);
         servicios.ConfigureHttpClientDefaults(cliente => cliente.ConfigurePrimaryHttpMessageHandler(() => captura));
 
-        return servicios.BuildServiceProvider().GetRequiredService<IGeoespacialClient>();
+        return servicios.BuildServiceProvider();
+    }
+
+    [Fact]
+    public void ClienteGeoespacial_ConFirmaIam_SeCreaSinCredencialesDisponibles()
+    {
+        // Las credenciales se resuelven en la primera petición firmada, no al crear los clientes: sin ellas,
+        // los controladores (que reciben todos los handlers) se siguen creando y las lecturas funcionan.
+        using ServiceProvider proveedor = ProveedorDesdeDi(new ManejadorCaptura(), new()
+        {
+            ["Geoespacial:FirmaIam:Region"] = "us-east-2",
+            ["AWS_REGION"] = "us-east-2"
+        }, conCredenciales: false);
+        using IServiceScope scope = proveedor.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<IGeoespacialClient>());
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<IEventPublisher>());
     }
 
     [Fact]

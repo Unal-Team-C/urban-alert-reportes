@@ -34,6 +34,8 @@ public static class ModoMigracion
                 Username = Requerido(seccion, "UsuarioAdmin"),
                 Password = Requerido(seccion, "ContrasenaAdmin"),
                 SslMode = seccion.GetValue("SslMode", SslMode.Require),
+                // Sin Kerberos en la imagen: evita que Npgsql intente cifrado GSS antes de TLS.
+                GssEncryptionMode = GssEncryptionMode.Disable,
                 Pooling = false
             };
 

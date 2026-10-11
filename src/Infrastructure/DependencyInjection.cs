@@ -1,8 +1,9 @@
 using System.Text.Json.Serialization;
+using Amazon;
 using Amazon.EventBridge;
 using Amazon.Runtime;
-using Amazon.Runtime.Credentials;
 using AwsSignatureVersion4;
+using Infrastructure.Aws;
 using Application.Comun;
 using Application.Interfaces.Eventos;
 using Application.Interfaces.Geoespacial;
@@ -60,10 +61,11 @@ public static class DependencyInjection
         string? regionFirma = configuration["Geoespacial:FirmaIam:Region"];
         if (!string.IsNullOrWhiteSpace(regionFirma))
         {
+            CredencialesPerezosas credencialesPorDefecto = new();
             cliente.AddHttpMessageHandler(sp => new AwsSignatureHandler(new AwsSignatureHandlerSettings(
                 regionFirma,
                 "execute-api",
-                sp.GetService<AWSCredentials>() ?? DefaultAWSCredentialsIdentityResolver.GetCredentials())));
+                sp.GetService<AWSCredentials>() ?? credencialesPorDefecto)));
         }
     }
 
@@ -107,11 +109,17 @@ public static class DependencyInjection
         if (string.IsNullOrWhiteSpace(bus))
             throw new InvalidOperationException("No se encontró la configuración 'EventBridge:Bus'.");
 
-        // Región y credenciales de la cadena por defecto del SDK (AWS_REGION y rol de tarea en ECS).
+        // Región de AWS_REGION (variable de entorno o configuración); credenciales de la cadena por defecto
+        // del SDK (rol de tarea en ECS), salvo que haya unas registradas (pruebas).
+        string? region = configuration["AWS_REGION"];
+        AmazonEventBridgeConfig configEventBridge = new();
+        if (!string.IsNullOrWhiteSpace(region))
+            configEventBridge.RegionEndpoint = RegionEndpoint.GetBySystemName(region);
+
         services.AddSingleton(new EventBridgeOpciones(bus));
         services.AddSingleton<IAmazonEventBridge>(sp => sp.GetService<AWSCredentials>() is { } credenciales
-            ? new AmazonEventBridgeClient(credenciales)
-            : new AmazonEventBridgeClient());
+            ? new AmazonEventBridgeClient(credenciales, configEventBridge)
+            : new AmazonEventBridgeClient(configEventBridge));
         services.AddScoped<IEventPublisher, EventBridgeEventPublisher>();
     }
 

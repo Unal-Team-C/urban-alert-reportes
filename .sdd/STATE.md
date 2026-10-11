@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T013
+tarea_actual: T014
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T013: src/Infrastructure/Persistencia/MigracionNube.cs + rama --migrar en Program.cs (Migracion:* → cadena admin con SSL Mode=Require).
+T014: HttpLogging (CombineLogs) + Apagado:TimeoutSegundos en Program.cs/appsettings.json; verificar ConfiguracionNubeTests y la imagen con logs JSON y podman stop < 20 s.
 
 ## Contexto de trabajo
 
