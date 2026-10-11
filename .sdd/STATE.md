@@ -3,16 +3,16 @@
 <!-- Puntero de reanudación. Claude lo actualiza en CADA transición (inicio/fin de tarea, cambio de fase, decisión, bloqueo).
      Editar este archivo = checkpoint (lo registra el hook). Mantenlo corto: el detalle va en specs/ y journal.md.
      fase: constitution | specify | clarify | plan | tasks | implement | verify | done
-     estado_tarea: hecha
+     estado_tarea: bloqueada
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T033
-estado_tarea: hecha
+tarea_actual: T032
+estado_tarea: bloqueada
 
 ## Siguiente paso
 
-T033 en PR (fix/migracion-rds). Tras el merge (usuario): seguir Provision en main (T031); si verde, humo + scripts/crear-reporte-prueba.sh y T032.
+T032: segundo Provision sin cambios de infraestructura (lo dispara el merge de este registro, rama verify/primer-provision); esperar 0 cambios en base/routes y solo imagen/task definition/servicio por el SHA nuevo. Después /sdd-verify (crear-reporte-prueba completo cuando Multimedia vuelva).
 
 ## Contexto de trabajo
 
@@ -25,4 +25,5 @@ T033 en PR (fix/migracion-rds). Tras el merge (usuario): seguir Provision en mai
 
 ## Bloqueos / preguntas abiertas
 
-- Logs del run 38160461687 ya borrados (usuario). PR #2 (fix/migracion-rds) pendiente de merge.
+- Multimedia responde 503 directamente por el gateway (también GET metadata): su backend (DocumentDB) no está disponible. Fuera de este repo; bloquea solo la parte de imagen de MS-002.
+- T032 necesita un push a main (merge de verify/primer-provision).

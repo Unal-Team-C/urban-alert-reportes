@@ -124,3 +124,8 @@
 
 ## 2026-10-11 · 001-migracion-aws · Logs del run 38160461687 borrados
 - El usuario borró los logs del run (API: 404 en runs/.../logs y jobs/.../logs). gh conserva una copia en su caché local (~/.cache/gh). La contraseña filtrada se rota con PR #2.
+
+## 2026-10-11 · 001-migracion-aws · T031 hecha: primer Provision en verde (run 38162982758)
+- base: 3 reemplazados (random_password, versión del secreto, task definition de migración: rotación); imagen reutilizada (mismo SHA? no: tag del merge #2 ya existía por el run fallido? → "already exists"); migración: 0 pendientes (el run fallido ya había migrado antes del error del rol) y rol sincronizado; service +1; routes +4; humo 9/9 (primer intento 404 mientras se propagaban las rutas).
+- crear-reporte-prueba.sh: JSON 201 con idCoordenada de Geoespacial (firma SigV4 OK) y PutEvents sin error; DELETE 204. Multipart 503: Multimedia devuelve 503 también llamado directamente (POST images y GET metadata) → problema de Multimedia, no de Reportes; Reportes lo traduce bien (503 MultimediaNoDisponible).
+- Corrección de la entrada anterior: la imagen sí se construyó y publicó con el SHA d75ef71 (solo se reutilizaron capas); la línea "already exists" era el texto del script, no su ejecución.
