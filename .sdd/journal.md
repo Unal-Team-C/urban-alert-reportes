@@ -55,3 +55,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T008 hecha
 - MigracionNubeTests (3 casos: idempotente con todas las migraciones, CRUD sin DDL para el rol, contraseña resincronizada); base y rol únicos por prueba. Falla por compilación (MigracionNube no existe).
+
+## 2026-10-11 · 001-migracion-aws · T009 hecha
+- ConfiguracionNubeTests (Production + config de la nube, sin RabbitMq:Host; AWSCredentials falsas en DI): EventBridge, Multimedia Gateway, /health. Falla por compilación.

@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T008
+tarea_actual: T009
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T008: tests/IntegrationTests/Persistencia/MigracionNubeTests.cs (base temporal + rol único por prueba; MigracionNube.EjecutarAsync(MigracionNubeOpciones(CadenaAdmin, UsuarioApp, ContrasenaApp))).
+T009: tests/IntegrationTests/Configuracion/ConfiguracionNubeTests.cs (WebApplicationFactory en Production con la configuración de la nube, sin RabbitMq:Host).
 
 ## Contexto de trabajo
 
