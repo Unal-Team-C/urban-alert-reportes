@@ -1,0 +1,20 @@
+@API_HostAddress = http://localhost:5039
+
+POST {{API_HostAddress}}/api/v1/Reportes
+Content-Type: application/json
+
+{
+  "categoria": "VIAS_Y_ANDENES",
+  "tipo": "HUECOS_EN_LA_VIA",
+  "descripcion": "Hueco grande que afecta el tránsito vehicular",
+  "latitud": 4.6512,
+  "longitud": -74.0561,
+  "urlImagen": "https://imagenes.urbanalert.com/foto.jpg"
+}
+
+###
+
+GET {{API_HostAddress}}/api/v1/Reportes
+Accept: application/json
+
+###

@@ -1,0 +1,37 @@
+# Nombre de proyecto explícito: este archivo vive en una carpeta llamada "docker/", igual que el
+# de otros servicios del workspace, y Compose usa ese nombre de carpeta como project name por
+# defecto. Sin esto, dos stacks distintos comparten namespace y Compose puede confundir sus
+# contenedores entre sí (ya pasó una vez con el equivalente de Auditoría: recreó este mismo
+# contenedor de postgres al traer arriba el stack de otro servicio).
+name: urbanalert-reportes
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: urbanalert-reportes-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${REPORTES_DB_NAME:-urbanalert_reportes}
+      POSTGRES_USER: ${REPORTES_DB_USER:?Falta REPORTES_DB_USER en deploy/docker/.env}
+      POSTGRES_PASSWORD: ${REPORTES_DB_PASSWORD:?Falta REPORTES_DB_PASSWORD en deploy/docker/.env}
+    ports:
+      - "5432:5432"
+    volumes:
+      - urbanalert-reportes-postgres-data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: urbanalert-reportes-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${REPORTES_RABBITMQ_USER:?Falta REPORTES_RABBITMQ_USER en deploy/docker/.env}
+      RABBITMQ_DEFAULT_PASS: ${REPORTES_RABBITMQ_PASSWORD:?Falta REPORTES_RABBITMQ_PASSWORD en deploy/docker/.env}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - urbanalert-reportes-rabbitmq-data:/var/lib/rabbitmq
+
+volumes:
+  urbanalert-reportes-postgres-data:
+  urbanalert-reportes-rabbitmq-data:
