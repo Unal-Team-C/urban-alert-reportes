@@ -4,8 +4,10 @@ name   = "urban-alert-reportes"
 # Created by hand outside every repo (spec RF-012); only used, never managed here.
 event_bus_arn = "arn:aws:events:us-east-2:348364742283:event-bus/urban-alert-bus-eventos"
 
-db_name                     = "urbanalert_reportes"
-db_app_user                 = "reportes_app"
+db_name     = "urbanalert_reportes"
+db_app_user = "reportes_app"
+# 2: rotated after the first password appeared in the log of Provision run 38160461687 (never applied).
+db_app_password_version     = "2"
 db_engine_version           = "17"
 db_instance_class           = "db.t4g.micro"
 db_allocated_storage_gb     = 20

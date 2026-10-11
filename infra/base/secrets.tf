@@ -3,6 +3,12 @@
 resource "random_password" "app" {
   length  = 32
   special = false
+
+  # Bump db_app_password_version to rotate it: the migration task then syncs the role and new tasks read the
+  # new secret value.
+  keepers = {
+    version = var.db_app_password_version
+  }
 }
 
 locals {
