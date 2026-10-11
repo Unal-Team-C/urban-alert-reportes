@@ -430,3 +430,9 @@ FodyWeavers.xsd
 # Arnés SDD
 .sdd/activity.log
 .DS_Store
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan

@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T015
-estado_tarea: hecha
+tarea_actual: T016
+estado_tarea: en_progreso
 
 ## Siguiente paso
 
-T015: suite completa local (Development + RabbitMQ).
+T016–T020: stack infra/base adaptado de ../Microservicio usuarios/infra/base.
 
 ## Contexto de trabajo
 
