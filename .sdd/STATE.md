@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T012
+tarea_actual: T013
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T012: MultimediaHttpClient con modos Emulador | Gateway (MultimediaOpciones, ModoMultimedia); verificar MultimediaHttpClientTests (no necesita base: --filter).
+T013: src/Infrastructure/Persistencia/MigracionNube.cs + rama --migrar en Program.cs (Migracion:* → cadena admin con SSL Mode=Require).
 
 ## Contexto de trabajo
 

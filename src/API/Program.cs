@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json.Serialization;
 using API.HealthChecks;
+using API.Migracion;
 using API.Middleware;
 using API.ModelBinding;
 using Application;
@@ -14,6 +15,10 @@ using Scalar.AspNetCore;
 // cultura del proceso; así "4.65" es siempre 4.65, también en un servidor configurado en español.
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+
+// Tarea puntual de migración en AWS: aplica el esquema y termina sin levantar la web.
+if (args.Contains(ModoMigracion.Argumento))
+    return await ModoMigracion.EjecutarAsync(args);
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +50,7 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
-app.Run();
+await app.RunAsync();
+return 0;
 
 public partial class Program { }

@@ -67,3 +67,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T012 hecha
 - MultimediaHttpClient: multipart e interpretación comunes, transportes Emulador (sobre RIE) y Gateway (multipart a api/v1/multimedia/images); Multimedia:Modo en DI (valor inválido → error). Clientes Multimedia+Geoespacial 29/29 en verde (se excluyó MigracionNubeTests, que aún no compila; el fallo de CrearReporte_ConArchivo necesita PostgreSQL).
+
+## 2026-10-11 · 001-migracion-aws · T013 hecha
+- MigracionNube (Migrate + rol app idempotente vía set_config/format %L; también secuencias y REVOKE CREATE ON SCHEMA public FROM PUBLIC) y API/Migracion/ModoMigracion (--migrar, Migracion:* desde el entorno, SslMode=Require por defecto, código 0/1). Program devuelve int. MigracionNubeTests 3/3 contra postgres:16 local (contenedores reportes-it-pg/rabbit, scripts it.sh/it.env en el scratchpad).
