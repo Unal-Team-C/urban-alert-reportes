@@ -73,3 +73,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T014 hecha
 - HttpLogging (CombineLogs: método, ruta, código, duración) + Apagado:TimeoutSegundos; appsettings con claves nuevas (valores locales). Correcciones halladas al probar la imagen: (1) región de EventBridge desde AWS_REGION de configuración; (2) CredencialesPerezosas: la firma resolvía credenciales al crear el HttpClient y sin ellas TODAS las rutas daban 500 → ahora se resuelven en la primera petición firmada (prueba nueva); (3) GssEncryptionMode=Disable (ruido libgssapi_krb5) → el secreto connection_string debe llevar 'GSS Encryption Mode=Disable' (T018). Verificado: UnitTests 86/86, IT 75/75 (local), imagen Production: /health y lecturas 200 sin credenciales, logs JSON, stop < 1 s; --migrar desde la imagen exit 0 y la app lee como reportes_app. Hallazgo previo: IT en base NUEVA → carrera de migraciones entre fixtures (PK___EFMigrationsHistory); en CI ejecutar --migrar antes de dotnet test (T026).
+
+## 2026-10-11 · 001-migracion-aws · T015 hecha
+- Local sin cambios: IT 75/75 en Development con RabbitMQ (la creación publica por MassTransit; transporte por defecto) y UnitTests 86/86.

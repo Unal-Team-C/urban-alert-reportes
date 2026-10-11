@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T014
+tarea_actual: T015
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T014: HttpLogging (CombineLogs) + Apagado:TimeoutSegundos en Program.cs/appsettings.json; verificar ConfiguracionNubeTests y la imagen con logs JSON y podman stop < 20 s.
+T015: suite completa local (Development + RabbitMQ).
 
 ## Contexto de trabajo
 
