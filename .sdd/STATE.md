@@ -6,13 +6,13 @@
      estado_tarea: - | en_progreso | hecha | bloqueada -->
 
 feature_activa: 001-migracion-aws
-fase: plan
+fase: tasks
 tarea_actual: -
 estado_tarea: -
 
 ## Siguiente paso
 
-Pedir aprobación de specs/001-migracion-aws/plan.md (borrador completo). Aprobado → `/sdd-tasks` (base: tasks.md de Usuarios). Arranque pendiente del usuario: política D-016 + AWS_ROLE_ARN/AWS_REGION en GitHub.
+Pedir aprobación de specs/001-migracion-aws/tasks.md (32 tareas). Aprobado → `/sdd-implement` desde T001.
 
 ## Contexto de trabajo
 

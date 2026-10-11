@@ -26,3 +26,6 @@
 - 3 stacks como Usuarios; migración con la misma imagen (`API.dll --migrar`, D-002/D-003); rol de tarea con `execute-api:Invoke` (POST coordinates) + `events:PutEvents` (bus) (D-004).
 - Código por configuración: SigV4 con `AwsSignatureVersion4` 5.1.0 (D-005, riesgo de compatibilidad con AWSSDK.Core 4 → plan B propio), Multimedia `Modo=Gateway` (D-006), `EventBridgeEventPublisher` con AWSSDK.EventBridge 4.0.101.2 (D-007), logs JSON + HttpLogging (D-008).
 - Rutas `ANY /api/v1/reportes` y `ANY /api/v1/reportes/{proxy+}` públicas (D-012). Política de arranque nueva `github-actions-urban-alert-reportes` solo con `events:DescribeEventBus` (D-016). IT en CI con service containers (D-017).
+
+## 2026-10-11 · 001-migracion-aws · Plan aprobado; tareas en borrador
+- 32 tareas en 5 fases; T002 valida pronto el riesgo de AwsSignatureVersion4 con AWSSDK.Core 4.
