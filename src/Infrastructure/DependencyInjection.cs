@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using Amazon.EventBridge;
+using Amazon.Runtime;
 using Application.Comun;
 using Application.Interfaces.Eventos;
 using Application.Interfaces.Geoespacial;
@@ -29,7 +31,7 @@ public static class DependencyInjection
 
         AgregarGeoespacial(services, configuration);
         AgregarMultimedia(services, configuration);
-        AgregarMassTransit(services, configuration);
+        AgregarMensajeria(services, configuration);
 
         return services;
     }
@@ -64,6 +66,33 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
             client.Timeout = TimeSpan.FromSeconds(timeoutSegundos);
         });
+    }
+
+    // RabbitMq (local, por defecto) o EventBridge (AWS). Con EventBridge no se registra MassTransit.
+    private static void AgregarMensajeria(IServiceCollection services, IConfiguration configuration)
+    {
+        string transporte = configuration["Mensajeria:Transporte"] ?? "RabbitMq";
+
+        if (string.Equals(transporte, "EventBridge", StringComparison.OrdinalIgnoreCase))
+            AgregarEventBridge(services, configuration);
+        else if (string.Equals(transporte, "RabbitMq", StringComparison.OrdinalIgnoreCase))
+            AgregarMassTransit(services, configuration);
+        else
+            throw new InvalidOperationException($"'Mensajeria:Transporte' no admite '{transporte}' (RabbitMq | EventBridge).");
+    }
+
+    private static void AgregarEventBridge(IServiceCollection services, IConfiguration configuration)
+    {
+        string? bus = configuration["EventBridge:Bus"];
+        if (string.IsNullOrWhiteSpace(bus))
+            throw new InvalidOperationException("No se encontró la configuración 'EventBridge:Bus'.");
+
+        // Región y credenciales de la cadena por defecto del SDK (AWS_REGION y rol de tarea en ECS).
+        services.AddSingleton(new EventBridgeOpciones(bus));
+        services.AddSingleton<IAmazonEventBridge>(sp => sp.GetService<AWSCredentials>() is { } credenciales
+            ? new AmazonEventBridgeClient(credenciales)
+            : new AmazonEventBridgeClient());
+        services.AddScoped<IEventPublisher, EventBridgeEventPublisher>();
     }
 
     private static void AgregarMassTransit(IServiceCollection services, IConfiguration configuration)

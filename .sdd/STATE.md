@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T009
+tarea_actual: T010
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T009: tests/IntegrationTests/Configuracion/ConfiguracionNubeTests.cs (WebApplicationFactory en Production con la configuración de la nube, sin RabbitMq:Host).
+T010: EventBridgeEventPublisher + Mensajeria:Transporte en DependencyInjection; verificar EventBridgeEventPublisherTests.
 
 ## Contexto de trabajo
 
