@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T004
+tarea_actual: T005
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T004: infra/INVENTARIO.md.
+T005: tests/UnitTests/Infrastructure/EventBridgeEventPublisherTests.cs (cliente falso: subclase de AmazonEventBridgeClient con PutEventsAsync sobrescrito).
 
 ## Contexto de trabajo
 

@@ -43,3 +43,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T004 hecha
 - infra/INVENTARIO.md con los 3 stacks, arranque (incluida la política nueva) y externos (bus, rutas de Geoespacial/Multimedia, roles de Geoespacial).
+
+## 2026-10-11 · 001-migracion-aws · T005 hecha
+- EventBridgeEventPublisherTests (3 casos; cliente falso = subclase de AmazonEventBridgeClient). Falla solo por compilación (EventBridgeEventPublisher/EventBridgeOpciones no existen).
