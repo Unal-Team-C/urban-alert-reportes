@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T025
+tarea_actual: T026
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T025: scripts/crear-reporte-prueba.sh (crea JSON + multipart, comprueba idCoordenada/urlImagen, borra).
+T026: .github/workflows/provision.yml (job test con services postgres+rabbitmq y --migrar antes de las IT; job provision en el orden de §7).
 
 ## Contexto de trabajo
 

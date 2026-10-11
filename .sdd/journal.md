@@ -97,3 +97,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T025 hecha
 - crear-reporte-prueba.sh: JSON + multipart (PNG 1x1), idCoordenada, urlImagen 200, DELETE 204 de ambos. shellcheck limpio; sin argumentos → uso y exit 2. Se ejecuta en /sdd-verify contra AWS.
+
+## 2026-10-11 · 001-migracion-aws · T026 hecha
+- provision.yml: job test con services postgres:16-alpine y rabbitmq:4-alpine (credenciales desechables ci-only), setup-dotnet desde global.json, build Release, --migrar antes de dotnet test (evita la carrera de migraciones de los fixtures en base nueva), scripts, Terraform x3, actionlint, shellcheck; job provision como Usuarios (check-platform con bus, sin --target en docker build: el Dockerfile no tiene etapa runtime). actionlint limpio.
