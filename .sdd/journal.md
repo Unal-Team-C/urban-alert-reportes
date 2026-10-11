@@ -121,3 +121,6 @@
 - ALTER ROLE sin NOSUPERUSER/NOCREATEDB/NOCREATEROLE; PostgresException del SQL del rol → InvalidOperationException con SqlState y mensaje, sin la excepción original (el Where llevaba la contraseña). Rotación: random_password con keepers db_app_password_version = "2".
 - Pruebas nuevas: admin CREATEROLE NOSUPERUSER dueño de la base (como RDS) — falla con el SQL antiguo, pasa con el nuevo — y error sin contraseña. IT 77/77, unitarias 86/86, base 13/13.
 - Copias de iCloud "* 2.*" (no versionadas) rompían el build local: movidas al scratchpad e ignoradas.
+
+## 2026-10-11 · 001-migracion-aws · Logs del run 38160461687 borrados
+- El usuario borró los logs del run (API: 404 en runs/.../logs y jobs/.../logs). gh conserva una copia en su caché local (~/.cache/gh). La contraseña filtrada se rota con PR #2.

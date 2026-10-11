@@ -25,4 +25,4 @@ T033 en PR (fix/migracion-rds). Tras el merge (usuario): seguir Provision en mai
 
 ## Bloqueos / preguntas abiertas
 
-- Run 38160461687 (público) contiene la contraseña de reportes_app (nunca aplicada: la transacción se revirtió). Se rota en T033; preguntar al usuario si borrar los logs del run.
+- Logs del run 38160461687 ya borrados (usuario). PR #2 (fix/migracion-rds) pendiente de merge.
