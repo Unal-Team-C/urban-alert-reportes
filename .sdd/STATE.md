@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T005
+tarea_actual: T006
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T005: tests/UnitTests/Infrastructure/EventBridgeEventPublisherTests.cs (cliente falso: subclase de AmazonEventBridgeClient con PutEventsAsync sobrescrito).
+T006: ampliar FirmaGeoespacialTests con DI (AddInfrastructure + ConfigureHttpClientDefaults con manejador de captura; AWSCredentials registrado en DI para la prueba).
 
 ## Contexto de trabajo
 

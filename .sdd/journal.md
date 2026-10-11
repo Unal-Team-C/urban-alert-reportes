@@ -46,3 +46,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T005 hecha
 - EventBridgeEventPublisherTests (3 casos; cliente falso = subclase de AmazonEventBridgeClient). Falla solo por compilación (EventBridgeEventPublisher/EventBridgeOpciones no existen).
+
+## 2026-10-11 · 001-migracion-aws · T006 hecha
+- FirmaGeoespacialTests + 2 casos por DI. Esperado: con FirmaIam falla (ruta y firma no configurables aún); sin FirmaIam pasa (comportamiento actual).
