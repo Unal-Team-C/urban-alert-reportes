@@ -3,16 +3,16 @@
 <!-- Puntero de reanudación. Claude lo actualiza en CADA transición (inicio/fin de tarea, cambio de fase, decisión, bloqueo).
      Editar este archivo = checkpoint (lo registra el hook). Mantenlo corto: el detalle va en specs/ y journal.md.
      fase: constitution | specify | clarify | plan | tasks | implement | verify | done
-     estado_tarea: - | en_progreso | hecha | bloqueada -->
+     estado_tarea: bloqueada
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T029
-estado_tarea: hecha
+tarea_actual: T030
+estado_tarea: bloqueada
 
 ## Siguiente paso
 
-T029: comprobación completa (dotnet unit + IT en base nueva con --migrar previo, Terraform x3, scripts, actionlint, shellcheck, búsqueda de secretos).
+T030: el usuario crea/adjunta la política github-actions-urban-alert-reportes (infra/bootstrap/README.md §2) y configura AWS_ROLE_ARN + AWS_REGION en Unal-Team-C/urban-alert-reportes; con su permiso: git push -u origin aws-provisioning y gh pr create a main. Después T031 (seguir el primer Provision tras el merge) y T032.
 
 ## Contexto de trabajo
 
@@ -24,6 +24,4 @@ T029: comprobación completa (dotnet unit + IT en base nueva con --migrar previo
 
 ## Bloqueos / preguntas abiertas
 
-- ninguno
-- Las IT NO usan Testcontainers (README desactualizado): piden PostgreSQL y RabbitMQ reales por User Secrets/entorno (Development). En CI: service containers.
-- IAM: solo falta `events:DescribeEventBus` (comprobación del bus); task role con `events:PutEvents` lo cubre `iam:PutRolePolicy` existente.
+- T030 espera al usuario: política D-016, secretos/variables de GitHub y permiso para publicar la rama y abrir el PR.
