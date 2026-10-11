@@ -47,6 +47,11 @@ override_data {
   values = { value = "subnet-priv-a,subnet-priv-b" }
 }
 
+override_data {
+  target = data.aws_ssm_parameter.api_execution_arn
+  values = { value = "arn:aws:execute-api:us-east-2:348364742283:api123" }
+}
+
 variables {
   image_tag = "0123456789abcdef"
 }
@@ -80,7 +85,7 @@ run "own_database_is_private_encrypted_and_backed_up" {
 
   assert {
     condition     = aws_db_instance.this.identifier == "urban-alert-reportes-db" && aws_db_instance.this.engine == "postgres"
-    error_message = "Usuarios must have its own PostgreSQL instance (HU-3)."
+    error_message = "Reportes must have its own PostgreSQL instance (HU-3)."
   }
 
   assert {
@@ -161,9 +166,10 @@ run "roles_and_secrets_belong_to_this_service_only" {
   assert {
     condition = (
       aws_iam_role.execution.name == "urban-alert-reportes-ecs-execution" &&
-      aws_iam_role.infrastructure.name == "urban-alert-reportes-ecs-infrastructure"
+      aws_iam_role.infrastructure.name == "urban-alert-reportes-ecs-infrastructure" &&
+      aws_iam_role.task.name == "urban-alert-reportes-ecs-task"
     )
-    error_message = "Usuarios must use its own roles, never the urban-alert-ecs-* roles of Geoespacial (RF-012, P2)."
+    error_message = "Reportes must use its own roles, never the urban-alert-ecs-* roles of Geoespacial (RF-015, P2)."
   }
 
   assert {
@@ -183,6 +189,38 @@ run "roles_and_secrets_belong_to_this_service_only" {
   }
 }
 
+run "task_role_can_only_call_geoespacial_and_publish_to_the_bus" {
+  command = apply
+
+  assert {
+    condition     = length(jsondecode(aws_iam_role_policy.task.policy).Statement) == 2
+    error_message = "The task role must have exactly two permissions (RNF-001)."
+  }
+
+  assert {
+    condition = (
+      jsondecode(aws_iam_role_policy.task.policy).Statement[0].Action == "execute-api:Invoke" &&
+      jsondecode(aws_iam_role_policy.task.policy).Statement[0].Resource ==
+      "arn:aws:execute-api:us-east-2:348364742283:api123/$default/POST/api/v1/geoespacial/coordinates"
+    )
+    error_message = "The task role may only invoke POST /api/v1/geoespacial/coordinates of the shared gateway (RF-010)."
+  }
+
+  assert {
+    condition = (
+      jsondecode(aws_iam_role_policy.task.policy).Statement[1].Action == "events:PutEvents" &&
+      jsondecode(aws_iam_role_policy.task.policy).Statement[1].Resource ==
+      "arn:aws:events:us-east-2:348364742283:event-bus/urban-alert-bus-eventos"
+    )
+    error_message = "The task role may only publish to the shared bus (RF-012)."
+  }
+
+  assert {
+    condition     = jsondecode(aws_iam_role.task.assume_role_policy).Statement[0].Principal.Service == "ecs-tasks.amazonaws.com"
+    error_message = "Only ECS tasks may assume the task role."
+  }
+}
+
 run "app_secret_requires_tls_and_is_recreatable" {
   command = apply
 
@@ -192,17 +230,22 @@ run "app_secret_requires_tls_and_is_recreatable" {
   }
 
   assert {
-    condition     = endswith(jsondecode(aws_secretsmanager_secret_version.app.secret_string).jdbc_url, "/urbanalert_users?sslmode=require")
-    error_message = "jdbc_url must require TLS (RF-002)."
+    condition     = strcontains(jsondecode(aws_secretsmanager_secret_version.app.secret_string).connection_string, ";SSL Mode=Require;")
+    error_message = "connection_string must require TLS (RF-002)."
   }
 
   assert {
-    condition     = jsondecode(aws_secretsmanager_secret_version.app.secret_string).username == "users_app"
-    error_message = "The service must connect with the application role, not the master user (RF-010)."
+    condition     = strcontains(jsondecode(aws_secretsmanager_secret_version.app.secret_string).connection_string, ";Database=urbanalert_reportes;Username=reportes_app;")
+    error_message = "The service must connect to its database with the application role, not the master user (RF-009)."
+  }
+
+  assert {
+    condition     = strcontains(jsondecode(aws_secretsmanager_secret_version.app.secret_string).connection_string, ";Maximum Pool Size=8;")
+    error_message = "The pool size must come from db_pool_max (RF-003)."
   }
 }
 
-run "migration_task_runs_flyway_as_master_with_the_commit_image" {
+run "migration_task_runs_migrar_as_master_with_the_commit_image" {
   command = apply
 
   assert {
@@ -211,17 +254,22 @@ run "migration_task_runs_flyway_as_master_with_the_commit_image" {
   }
 
   assert {
+    condition     = jsondecode(aws_ecs_task_definition.migrate.container_definitions)[0].command == ["dotnet", "API.dll", "--migrar"]
+    error_message = "The migration task must run the image in --migrar mode (plan D-002)."
+  }
+
+  assert {
     condition = contains(
       [for e in jsondecode(aws_ecs_task_definition.migrate.container_definitions)[0].environment : "${e.name}=${e.value}"],
-      "SPRING_PROFILES_ACTIVE=aws,migrate"
+      "Migracion__UsuarioApp=reportes_app"
     )
-    error_message = "The migration task must use the aws,migrate profiles."
+    error_message = "The migration task must create the application role."
   }
 
   assert {
     condition = contains(
       [for s in jsondecode(aws_ecs_task_definition.migrate.container_definitions)[0].secrets : "${s.name}=${s.valueFrom}"],
-      "DB_USERNAME=arn:aws:secretsmanager:us-east-2:348364742283:secret:rds!db-mock:username::"
+      "Migracion__UsuarioAdmin=arn:aws:secretsmanager:us-east-2:348364742283:secret:rds!db-mock:username::"
     )
     error_message = "The migration task must connect as the RDS master user."
   }
@@ -259,6 +307,16 @@ run "name_must_keep_the_service_prefix" {
   }
 
   expect_failures = [var.name]
+}
+
+run "event_bus_must_be_a_bus_arn" {
+  command = plan
+
+  variables {
+    event_bus_arn = "urban-alert-bus-eventos"
+  }
+
+  expect_failures = [var.event_bus_arn]
 }
 
 run "backups_below_seven_days_are_rejected" {

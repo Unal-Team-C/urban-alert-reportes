@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T016
-estado_tarea: en_progreso
+tarea_actual: T020
+estado_tarea: hecha
 
 ## Siguiente paso
 
-T016–T020: stack infra/base adaptado de ../Microservicio usuarios/infra/base.
+T020: adaptar infra/base/tests/base.tftest.hcl (connection_string, rol de tarea con 2 acciones, --migrar) y ejecutar $TF test.
 
 ## Contexto de trabajo
 

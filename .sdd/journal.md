@@ -79,3 +79,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T016–T019 hechas (un commit)
 - Stack base copiado de Usuarios y adaptado: db urbanalert_reportes / reportes_app; variable event_bus_arn (validada) y geoespacial_assign_route; rol urban-alert-reportes-ecs-task con execute-api:Invoke (api-execution-arn de SSM + /$default/POST/api/v1/geoespacial/coordinates) y events:PutEvents (bus); secreto con connection_string (SSL Mode=Require, GSS Encryption Mode=Disable, Maximum Pool Size=db_pool_max=8); task definition de migración con command dotnet API.dll --migrar y Migracion__*. validate en verde (Terraform 1.16.5 por Podman, lock copiado de Usuarios). Las cuatro partes se hicieron juntas al copiar el stack: un solo commit.
+
+## 2026-10-11 · 001-migracion-aws · T020 hecha
+- base.tftest.hcl adaptado: rol de tarea con exactamente 2 permisos (Invoke sobre la ruta exacta, PutEvents sobre el bus), connection_string (TLS, base/usuario de la app, pool 8), migración --migrar como maestro, validación del ARN del bus. 13/13 en verde; lock de Usuarios válido con -lockfile=readonly.
