@@ -6,13 +6,13 @@
      estado_tarea: - | en_progreso | hecha | bloqueada -->
 
 feature_activa: 001-migracion-aws
-fase: tasks
-tarea_actual: -
-estado_tarea: -
+fase: implement
+tarea_actual: T001
+estado_tarea: hecha
 
 ## Siguiente paso
 
-Pedir aprobación de specs/001-migracion-aws/tasks.md (32 tareas). Aprobado → `/sdd-implement` desde T001.
+T001: global.json + .dockerignore; verificar build con $DOTNET (Podman) y podman build.
 
 ## Contexto de trabajo
 

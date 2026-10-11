@@ -29,3 +29,8 @@
 
 ## 2026-10-11 · 001-migracion-aws · Plan aprobado; tareas en borrador
 - 32 tareas en 5 fases; T002 valida pronto el riesgo de AwsSignatureVersion4 con AWSSDK.Core 4.
+
+## 2026-10-11 · 001-migracion-aws · Tareas aprobadas; inicio de implement
+
+## 2026-10-11 · 001-migracion-aws · T001 hecha
+- global.json (SDK 10.0.401, rollForward latestFeature en vez de latestPatch: la imagen sdk:10.0 puede cambiar de banda) y .dockerignore. Verificado: dotnet build en verde (Podman); podman build OK; la imagen corre como uid 1654 (app).
