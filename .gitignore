@@ -436,3 +436,6 @@ FodyWeavers.xsd
 *.tfstate
 *.tfstate.*
 *.tfplan
+
+# Copias de conflicto de sincronización (iCloud): "archivo 2.ext"
+* 2.*

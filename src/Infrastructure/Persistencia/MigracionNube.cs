@@ -12,7 +12,8 @@ public sealed record MigracionNubeOpciones(string CadenaAdmin, string UsuarioApp
 public static class MigracionNube
 {
     // La contraseña llega por set_config y se escapa con format('%L') dentro del servidor: nunca se
-    // interpola en el texto SQL ni se registra.
+    // interpola en el texto SQL. CREATE ROLE ya crea el rol sin superusuario, CREATEDB ni CREATEROLE; el ALTER
+    // no los repite porque en RDS el administrador no es superusuario y no puede tocar esos atributos.
     private const string SqlRolApp = """
         DO $$
         DECLARE
@@ -22,7 +23,7 @@ public static class MigracionNube
             IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = usuario) THEN
                 EXECUTE format('CREATE ROLE %I LOGIN', usuario);
             END IF;
-            EXECUTE format('ALTER ROLE %I WITH LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD %L', usuario, contrasena);
+            EXECUTE format('ALTER ROLE %I WITH LOGIN PASSWORD %L', usuario, contrasena);
             EXECUTE format('GRANT CONNECT ON DATABASE %I TO %I', current_database(), usuario);
             EXECUTE format('GRANT USAGE ON SCHEMA public TO %I', usuario);
             EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO %I', usuario);
@@ -60,8 +61,18 @@ public static class MigracionNube
             await parametros.ExecuteNonQueryAsync(cancellationToken);
         }
 
-        await using (NpgsqlCommand rol = new(SqlRolApp, conexion, transaccion))
+        try
+        {
+            await using NpgsqlCommand rol = new(SqlRolApp, conexion, transaccion);
             await rol.ExecuteNonQueryAsync(cancellationToken);
+        }
+        catch (PostgresException ex)
+        {
+            // El contexto del error (Where, InternalQuery) repite la sentencia que falló, que puede ser el
+            // ALTER ROLE con la contraseña: solo se propaga el código y el mensaje, sin la excepción original.
+            throw new InvalidOperationException(
+                $"No se pudo sincronizar el rol de la aplicación {opciones.UsuarioApp}: {ex.SqlState} {ex.MessageText}");
+        }
 
         await transaccion.CommitAsync(cancellationToken);
         logger.LogInformation("Rol de la aplicación {Usuario} sincronizado", opciones.UsuarioApp);

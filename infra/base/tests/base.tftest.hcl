@@ -240,6 +240,11 @@ run "app_secret_requires_tls_and_is_recreatable" {
   }
 
   assert {
+    condition     = random_password.app.keepers.version == "2"
+    error_message = "The application password must be tied to db_app_password_version so it can be rotated."
+  }
+
+  assert {
     condition     = strcontains(jsondecode(aws_secretsmanager_secret_version.app.secret_string).connection_string, ";Maximum Pool Size=8;")
     error_message = "The pool size must come from db_pool_max (RF-003)."
   }

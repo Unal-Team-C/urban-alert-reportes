@@ -68,6 +68,8 @@ Dependencias: cada fase depende de la anterior; dentro de una fase se ejecuta en
 
 <!-- /sdd-verify añade aquí tareas si detecta fallos -->
 
+- [x] T033 Corregir la migración en RDS (el maestro no es superusuario: quitar NOSUPERUSER/NOCREATEDB/NOCREATEROLE del ALTER ROLE), no dejar que el error de PostgreSQL (campo Where con el ALTER ROLE) llegue a los logs, y rotar la contraseña de reportes_app (quedó en el log público del run 38160461687) — archivos: src/Infrastructure/Persistencia/MigracionNube.cs, tests/IntegrationTests/Persistencia/MigracionNubeTests.cs, infra/base/secrets.tf, infra/base/variables.tf, infra/base/terraform.tfvars — cubre: RF-008, RF-009, RNF-001 — verifica: MigracionNubeTests con un administrador sin superusuario (como RDS) en verde; un fallo del SQL del rol no incluye la contraseña en el mensaje; random_password con keepers de versión
+
 ## Cobertura
 
 | Requisito | Tareas |

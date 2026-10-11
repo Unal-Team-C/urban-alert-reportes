@@ -56,6 +56,11 @@ variable "db_app_user" {
   type        = string
 }
 
+variable "db_app_password_version" {
+  description = "Rotation counter of the application role password; change it to generate a new one."
+  type        = string
+}
+
 variable "db_pool_max" {
   description = "Maximum connections per task (Npgsql pool). infra/service checks db_pool_max x max_tasks against the budget."
   type        = number

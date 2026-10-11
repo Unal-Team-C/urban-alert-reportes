@@ -25,7 +25,15 @@ public sealed class MigracionNubeTests : IAsyncLifetime
                           ?? throw new InvalidOperationException("Falta ConnectionStrings:Postgres para las pruebas de integración.");
     }
 
+    private readonly string _adminRds = $"admin_rds_{Guid.NewGuid():N}"[..30];
+
     private string CadenaAdmin => new NpgsqlConnectionStringBuilder(_cadenaServidor) { Database = _base, Pooling = false }.ConnectionString;
+
+    // Como el usuario maestro de RDS: puede crear roles y es dueño de la base, pero no es superusuario.
+    private string CadenaAdminRds => new NpgsqlConnectionStringBuilder(_cadenaServidor)
+    {
+        Database = _base, Username = _adminRds, Password = "AdminRds1", Pooling = false
+    }.ConnectionString;
 
     private string CadenaApp(string contrasena) => new NpgsqlConnectionStringBuilder(_cadenaServidor)
     {
@@ -37,13 +45,45 @@ public sealed class MigracionNubeTests : IAsyncLifetime
         NullLogger.Instance,
         CancellationToken.None);
 
-    public async Task InitializeAsync() =>
-        await EjecutarEnServidorAsync($"CREATE DATABASE \"{_base}\"");
+    public async Task InitializeAsync()
+    {
+        await EjecutarEnServidorAsync($"CREATE ROLE \"{_adminRds}\" LOGIN CREATEROLE NOSUPERUSER PASSWORD 'AdminRds1'");
+        await EjecutarEnServidorAsync($"CREATE DATABASE \"{_base}\" OWNER \"{_adminRds}\"");
+    }
 
     public async Task DisposeAsync()
     {
         await EjecutarEnServidorAsync($"DROP DATABASE IF EXISTS \"{_base}\" WITH (FORCE)");
         await EjecutarEnServidorAsync($"DROP ROLE IF EXISTS \"{_usuarioApp}\"");
+        await EjecutarEnServidorAsync($"DROP ROLE IF EXISTS \"{_adminRds}\"");
+    }
+
+    [Fact]
+    public async Task Migrar_FuncionaConUnAdministradorSinSuperusuario_ComoEnRds()
+    {
+        MigracionNubeOpciones opciones = new(CadenaAdminRds, _usuarioApp, "ContrasenaApp1");
+
+        await MigracionNube.EjecutarAsync(opciones, NullLogger.Instance, CancellationToken.None);
+        await MigracionNube.EjecutarAsync(opciones with { ContrasenaApp = "ContrasenaApp2" }, NullLogger.Instance, CancellationToken.None);
+
+        await using NpgsqlConnection conexion = new(CadenaApp("ContrasenaApp2"));
+        await conexion.OpenAsync();
+        await new NpgsqlCommand("SELECT count(*) FROM \"Reportes\"", conexion).ExecuteScalarAsync();
+    }
+
+    [Fact]
+    public async Task Migrar_NoIncluyeLaContrasenaEnElErrorDelRol()
+    {
+        // El rol ya existe y es de otro (el servidor): el administrador de RDS no puede cambiarle la contraseña.
+        await EjecutarEnServidorAsync($"CREATE ROLE \"{_usuarioApp}\" LOGIN");
+
+        InvalidOperationException error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            MigracionNube.EjecutarAsync(new MigracionNubeOpciones(CadenaAdminRds, _usuarioApp, "SecretoQueNoSeRegistra9"),
+                NullLogger.Instance, CancellationToken.None));
+
+        Assert.Contains("42501", error.Message);
+        Assert.DoesNotContain("SecretoQueNoSeRegistra9", error.ToString());
+        Assert.Null(error.InnerException);
     }
 
     [Fact]
