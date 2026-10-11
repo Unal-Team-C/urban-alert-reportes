@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T001
+tarea_actual: T002
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T001: global.json + .dockerignore; verificar build con $DOTNET (Podman) y podman build.
+T002: añadir AWSSDK.EventBridge 4.0.101.2 y AwsSignatureVersion4 5.1.0; prueba de firma en tests/UnitTests/Infrastructure/FirmaGeoespacialTests.cs; plan B D-005 si no es compatible con AWSSDK.Core 4.
 
 ## Contexto de trabajo
 

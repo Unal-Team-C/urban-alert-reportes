@@ -34,3 +34,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T001 hecha
 - global.json (SDK 10.0.401, rollForward latestFeature en vez de latestPatch: la imagen sdk:10.0 puede cambiar de banda) y .dockerignore. Verificado: dotnet build en verde (Podman); podman build OK; la imagen corre como uid 1654 (app).
+
+## 2026-10-11 · 001-migracion-aws · T002 hecha
+- AWSSDK.EventBridge 4.0.101.2 + AwsSignatureVersion4 5.1.0 (resuelve AWSSDK.Core 4.0.102.9). La firma funciona con Core 4 y credenciales AWSCredentials (sesión). Gotcha: AwsSignatureHandler quita Authorization/X-Amz-* tras enviar; las pruebas deben copiar cabeceras en el momento. UnitTests ahora referencia Infrastructure. 80/80 en verde.
