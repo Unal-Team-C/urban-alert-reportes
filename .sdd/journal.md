@@ -94,3 +94,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T024 hecha
 - smoke-gateway-reportes.sh (lista con página, query string reenviada, catálogo por {proxy+}, 404 del servicio con problem details vs 404 del gateway para /health, /scalar/v1, /openapi/v1.json, /api/v1/reportes-x, /api/v1/Reportes) + test-smoke 4/4; formas de respuesta comprobadas contra el servicio real. shellcheck limpio.
+
+## 2026-10-11 · 001-migracion-aws · T025 hecha
+- crear-reporte-prueba.sh: JSON + multipart (PNG 1x1), idCoordenada, urlImagen 200, DELETE 204 de ambos. shellcheck limpio; sin argumentos → uso y exit 2. Se ejecuta en /sdd-verify contra AWS.

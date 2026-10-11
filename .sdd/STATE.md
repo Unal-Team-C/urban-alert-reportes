@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T024
+tarea_actual: T025
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T024: scripts/smoke-gateway-reportes.sh + scripts/tests/test-smoke.sh.
+T025: scripts/crear-reporte-prueba.sh (crea JSON + multipart, comprueba idCoordenada/urlImagen, borra).
 
 ## Contexto de trabajo
 
