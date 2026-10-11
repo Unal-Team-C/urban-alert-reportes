@@ -1,0 +1,11 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DescribeSharedEventBus",
+      "Effect": "Allow",
+      "Action": "events:DescribeEventBus",
+      "Resource": "arn:aws:events:us-east-2:348364742283:event-bus/urban-alert-bus-eventos"
+    }
+  ]
+}

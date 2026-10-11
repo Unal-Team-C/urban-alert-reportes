@@ -37,3 +37,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T002 hecha
 - AWSSDK.EventBridge 4.0.101.2 + AwsSignatureVersion4 5.1.0 (resuelve AWSSDK.Core 4.0.102.9). La firma funciona con Core 4 y credenciales AWSCredentials (sesión). Gotcha: AwsSignatureHandler quita Authorization/X-Amz-* tras enviar; las pruebas deben copiar cabeceras en el momento. UnitTests ahora referencia Infrastructure. 80/80 en verde.
+
+## 2026-10-11 · 001-migracion-aws · T003 hecha
+- infra/bootstrap/README.md (recursos reutilizados, política nueva D-016 con comandos, GitHub, requisitos) y github-reportes-policy.json (json válido).

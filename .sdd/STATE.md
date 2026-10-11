@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T002
+tarea_actual: T003
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T002: añadir AWSSDK.EventBridge 4.0.101.2 y AwsSignatureVersion4 5.1.0; prueba de firma en tests/UnitTests/Infrastructure/FirmaGeoespacialTests.cs; plan B D-005 si no es compatible con AWSSDK.Core 4.
+T003/T004: infra/bootstrap/README.md + github-reportes-policy.json; infra/INVENTARIO.md (base: ../Microservicio usuarios/infra).
 
 ## Contexto de trabajo
 
