@@ -109,3 +109,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T029 hecha
 - Comprobación completa: base nueva + --migrar + IT 75/75 (orden de CI), UnitTests 86/86, Terraform base 13/13, service 7/7, routes 7/7, fmt limpio, pruebas de scripts 3/3, actionlint y shellcheck limpios; búsqueda de secretos: solo nombres, placeholders de .env.example y credenciales desechables de CI.
+
+## 2026-10-11 · 001-migracion-aws · T030 hecha
+- Política D-016 creada por el usuario; AWS_ROLE_ARN y AWS_REGION existen a nivel de organización (no de repo). Rama aws-provisioning publicada y PR #1 abierto a main. T031 espera al merge.

@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T030
+tarea_actual: T031
 estado_tarea: bloqueada
 
 ## Siguiente paso
 
-T030: el usuario crea/adjunta la política github-actions-urban-alert-reportes (infra/bootstrap/README.md §2) y configura AWS_ROLE_ARN + AWS_REGION en Unal-Team-C/urban-alert-reportes; con su permiso: git push -u origin aws-provisioning y gh pr create a main. Después T031 (seguir el primer Provision tras el merge) y T032.
+T031: tras el merge del PR #1 (https://github.com/Unal-Team-C/urban-alert-reportes/pull/1, decisión del usuario), seguir el run de Provision en main; si falla, gh run view --log-failed, corregir con commits pequeños. Luego humo + scripts/crear-reporte-prueba.sh <gateway> y T032.
 
 ## Contexto de trabajo
 
@@ -24,4 +24,4 @@ T030: el usuario crea/adjunta la política github-actions-urban-alert-reportes (
 
 ## Bloqueos / preguntas abiertas
 
-- T030 espera al usuario: política D-016, secretos/variables de GitHub y permiso para publicar la rama y abrir el PR.
+- T031 espera al merge del PR #1 (usuario). El PR no tiene checks: los workflows solo corren en push a main (validación en PR fuera de alcance).
