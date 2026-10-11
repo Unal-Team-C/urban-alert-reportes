@@ -85,3 +85,6 @@
 
 ## 2026-10-11 · 001-migracion-aws · T021 hecha
 - Stack service: task_role_arn (existe en el recurso Express, comprobado en el esquema del proveedor), entorno de §7 con dynamic environment (api-endpoint de SSM), secreto ConnectionStrings__Postgres = connection_string, /health, precondición con db_pool_max de base × max_tasks ≤ 50, shutdown_timeout_seconds validado (<30). validate + 7/7 tests en verde.
+
+## 2026-10-11 · 001-migracion-aws · T022 hecha
+- Stack routes: ANY /api/v1/reportes → /api/v1/Reportes y ANY /api/v1/reportes/{proxy+} → /api/v1/Reportes/$request.path.proxy, NONE, integration_method ANY; sin overwrite:querystring. 7/7 tests; fmt -check limpio en infra/.

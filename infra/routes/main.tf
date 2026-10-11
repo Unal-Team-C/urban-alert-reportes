@@ -1,5 +1,5 @@
-# Routes of the Usuarios service in the shared API Gateway (spec RF-019, plan D-010). Same integration pattern as
-# infra/ejemplo-consumidor of Unal-Team-C/urban-alert-plataforma and infra/routes of urban-alert-geoespacial.
+# Routes of the Reportes service in the shared API Gateway (spec RF-021, plan D-012). Same integration pattern as
+# infra/ejemplo-consumidor of Unal-Team-C/urban-alert-plataforma and infra/routes of urban-alert-usuarios.
 data "aws_ssm_parameter" "api_id" {
   name = "/urban-alert/plataforma/api-id"
 }
@@ -17,45 +17,18 @@ locals {
   api_id      = nonsensitive(data.aws_ssm_parameter.api_id.value)
   vpc_link_id = nonsensitive(data.aws_ssm_parameter.vpc_link_id.value)
 
-  # Public route -> path of the service. Reads are public (NONE); writes require a SigV4 signature of an AWS
-  # identity allowed to execute-api:Invoke them (AWS_IAM). Explicit routes, no {proxy+}: a new endpoint is
-  # never published without being listed here.
+  # Public route -> path of the service, as the local Nginx gateway (location /api/v1/reportes/ ->
+  # /api/v1/Reportes/). Every endpoint of the service is public (spec §11): any method, no client authentication.
+  # Both routes stay inside the service prefix; /health, /openapi and /scalar are outside it, so the gateway
+  # answers 404 for them without reaching the service. The query string is forwarded unchanged.
   routes = {
-    list = {
-      route_key = "GET /api/v1/usuarios"
-      method    = "GET"
-      path      = "/api/v1/users"
-      auth      = "NONE"
+    root = {
+      route_key = "ANY /api/v1/reportes"
+      path      = "/api/v1/Reportes"
     }
-    get = {
-      route_key = "GET /api/v1/reportes/{id}"
-      method    = "GET"
-      path      = "/api/v1/users/$request.path.id"
-      auth      = "NONE"
-    }
-    create = {
-      route_key = "POST /api/v1/usuarios"
-      method    = "POST"
-      path      = "/api/v1/users"
-      auth      = "AWS_IAM"
-    }
-    update = {
-      route_key = "PUT /api/v1/reportes/{id}"
-      method    = "PUT"
-      path      = "/api/v1/users/$request.path.id"
-      auth      = "AWS_IAM"
-    }
-    update_role = {
-      route_key = "PATCH /api/v1/reportes/{id}/role"
-      method    = "PATCH"
-      path      = "/api/v1/users/$request.path.id/role"
-      auth      = "AWS_IAM"
-    }
-    delete = {
-      route_key = "DELETE /api/v1/reportes/{id}"
-      method    = "DELETE"
-      path      = "/api/v1/users/$request.path.id"
-      auth      = "AWS_IAM"
+    proxy = {
+      route_key = "ANY /api/v1/reportes/{proxy+}"
+      path      = "/api/v1/Reportes/$request.path.proxy"
     }
   }
 }
@@ -67,7 +40,7 @@ resource "aws_apigatewayv2_integration" "this" {
 
   api_id                 = local.api_id
   integration_type       = "HTTP_PROXY"
-  integration_method     = each.value.method
+  integration_method     = "ANY"
   integration_uri        = var.express_listener_arn
   connection_type        = "VPC_LINK"
   connection_id          = local.vpc_link_id
@@ -88,6 +61,6 @@ resource "aws_apigatewayv2_route" "this" {
 
   api_id             = local.api_id
   route_key          = each.value.route_key
-  authorization_type = each.value.auth
+  authorization_type = "NONE"
   target             = "integrations/${aws_apigatewayv2_integration.this[each.key].id}"
 }

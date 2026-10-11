@@ -7,12 +7,12 @@
 
 feature_activa: 001-migracion-aws
 fase: implement
-tarea_actual: T021
+tarea_actual: T022
 estado_tarea: hecha
 
 ## Siguiente paso
 
-T021: infra/service adaptado (variables de §7 del plan, /health, rol de tarea, ConnectionStrings__Postgres como secreto) + pruebas.
+T022: infra/routes con ANY /api/v1/reportes y ANY /api/v1/reportes/{proxy+} (NONE) + pruebas.
 
 ## Contexto de trabajo
 

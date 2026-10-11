@@ -1,5 +1,5 @@
 output "gateway_url" {
-  description = "Public URL of the shared gateway; the service lives under /api/v1/usuarios."
+  description = "Public URL of the shared gateway; the service lives under /api/v1/reportes."
   value       = nonsensitive(data.aws_ssm_parameter.api_endpoint.value)
 }
 
