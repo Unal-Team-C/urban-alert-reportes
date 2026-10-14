@@ -12,7 +12,7 @@ Ninguno se importó: no existían antes del código. Los crea y destruye Terrafo
 | `service` (`reportes/service.tfstate`) | Servicio ECS Express `urban-alert-reportes` (con su regla en el balanceador **interno** de Express, certificado y escalado, que crea ECS con el rol de infraestructura) |
 | `routes` (`reportes/routes.tfstate`) | En el API Gateway compartido: 2 integraciones HTTP_PROXY por el VPC Link de la plataforma y 2 rutas públicas: `ANY /api/v1/reportes` y `ANY /api/v1/reportes/{proxy+}` |
 
-Fecha del primer aprovisionamiento: _pendiente_.
+Fecha del primer aprovisionamiento: **2026-10-11**, *Provision* run 38162982758 (commit `d75ef71`, merge del PR #2; el run 38160461687 del PR #1 falló en la migración y dejó la base aplicada): base 3 recursos reemplazados (rotación de la contraseña), service 1, routes 4; prueba de humo por el gateway en verde. Gateway `https://aotsp8k5ad.execute-api.us-east-2.amazonaws.com`, listener del ALB compartido `…/ecs-express-gateway-alb-0e38b589/…` (el mismo de Usuarios: Express comparte el ALB entre clústeres).
 
 Al desaprovisionar queda la copia final de la base `urban-alert-reportes-final-<run_id>` (no la gestiona Terraform; borrarla a mano cuando ya no se necesite).
 
