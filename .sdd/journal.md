@@ -163,3 +163,8 @@
 ## 2026-10-19 · 002-resiliencia-eventos · T004 hecha
 - Migración 20261019150110_AgregarOutbox (dotnet-ef 10.0.4): tabla MensajesOutbox + IX_MensajesOutbox_Pendientes (parcial PENDIENTE). Down: DropTable.
 - Verificado: --migrar sobre base vacía aplicó 7 migraciones y sincronizó reportes_app (INSERT/UPDATE/SELECT sobre MensajesOutbox = t); segunda ejecución: 0 pendientes.
+
+## 2026-10-19 · 002-resiliencia-eventos · T005 hecha
+- IReporteRepository.AgregarAsync(reporte, IEventoDominio, ct): Add reporte + MensajeOutbox.Crear(evento, TimeProvider) y un SaveChanges. TimeProvider.System registrado con TryAdd. CrearReporteHandler ya no depende de IEventPublisher.
+- Unitarias: RepositorioFalso guarda eventos; prueba nueva de fallo del guardado sin reporte ni evento. 96/96.
+- IT nuevas (OutboxGuardadoTests): POST deja la fila ReporteCreadoEvent del reporte; Id duplicado → DbUpdateException y ninguna fila del segundo evento. IT 79/79 en local (Podman).

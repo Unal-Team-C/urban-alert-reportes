@@ -1,4 +1,5 @@
 using Application.Interfaces.Reportes;
+using Application.Reportes.Eventos;
 using Domain.Reportes;
 using Infrastructure.Persistencia;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +24,7 @@ public class ReporteConcurrenciaTests(ReportesApiFactory factory) : IClassFixtur
         using (IServiceScope scopeSemilla = factory.Services.CreateScope())
         {
             IReporteRepository repositorio = scopeSemilla.ServiceProvider.GetRequiredService<IReporteRepository>();
-            await repositorio.AgregarAsync(reporte, CancellationToken.None);
+            await repositorio.AgregarAsync(reporte, EventoDe(reporte), CancellationToken.None);
         }
 
         using IServiceScope scopeDesactualizado = factory.Services.CreateScope();
@@ -42,4 +43,8 @@ public class ReporteConcurrenciaTests(ReportesApiFactory factory) : IClassFixtur
 
         await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => contextoDesactualizado.SaveChangesAsync());
     }
+
+    private static ReporteCreadoEvent EventoDe(Reporte reporte) => new(
+        Guid.CreateVersion7(),
+        new ReporteEventoDto(reporte.Id, reporte.Estado, reporte.IdCoordenada, reporte.IdUsuario, reporte.Fecha));
 }

@@ -1,6 +1,5 @@
 using Application.Imagenes;
 using Application.Interfaces.CrearReporte;
-using Application.Interfaces.Eventos;
 using Application.Interfaces.Geoespacial;
 using Application.Interfaces.Multimedia;
 using Application.Interfaces.Reportes;
@@ -14,18 +13,15 @@ public class CrearReporteHandler : ICrearReporteHandler
     private readonly IReporteRepository _reporteRepository;
     private readonly IGeoespacialClient _geoespacialClient;
     private readonly IMultimediaClient _multimediaClient;
-    private readonly IEventPublisher _eventPublisher;
 
     public CrearReporteHandler(
         IReporteRepository reporteRepository,
         IGeoespacialClient geoespacialClient,
-        IMultimediaClient multimediaClient,
-        IEventPublisher eventPublisher)
+        IMultimediaClient multimediaClient)
     {
         _reporteRepository = reporteRepository;
         _geoespacialClient = geoespacialClient;
         _multimediaClient = multimediaClient;
-        _eventPublisher = eventPublisher;
     }
 
     public async Task<Guid> Handle(CrearReporteCommand command, CancellationToken cancellationToken)
@@ -73,13 +69,13 @@ public class CrearReporteHandler : ICrearReporteHandler
 
         reporte.AsignarCoordenada(idCoordenada);
 
-        await _reporteRepository.AgregarAsync(reporte, cancellationToken);
-
         ReporteCreadoEvent evento = new(
             Guid.CreateVersion7(),
             new ReporteEventoDto(reporte.Id, reporte.Estado, reporte.IdCoordenada, reporte.IdUsuario, reporte.Fecha));
 
-        await _eventPublisher.PublicarAsync(evento, cancellationToken);
+        // El evento se guarda con el reporte (outbox) y se entrega en segundo plano: un fallo del bus ya
+        // no hace fallar una creación que sí ocurrió (spec 002 RF-001, RF-005).
+        await _reporteRepository.AgregarAsync(reporte, evento, cancellationToken);
 
         return reporte.Id;
     }

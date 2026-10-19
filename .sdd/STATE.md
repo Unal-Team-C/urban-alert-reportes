@@ -7,12 +7,12 @@
 
 feature_activa: 002-resiliencia-eventos
 fase: implement
-tarea_actual: T005
+tarea_actual: T006
 estado_tarea: -
 
 ## Siguiente paso
 
-T005: IReporteRepository.AgregarAsync(reporte, IEventoDominio, ct) con un SaveChanges; handler sin IEventPublisher; pruebas unitarias + IT OutboxGuardadoTests.
+T006: DespachadorOutbox (BackgroundService) + OutboxOpciones; lote FOR UPDATE SKIP LOCKED en transacción; publica por IEventPublisher en un scope; backoff/FALLIDO; registro en DI y appsettings Outbox:*.
 
 ## Contexto de trabajo
 
@@ -23,6 +23,7 @@ T005: IReporteRepository.AgregarAsync(reporte, IEventoDominio, ct) con un SaveCh
 - Hoy CrearReporteHandler: guarda → PutEvents; si PutEvents falla, el cliente recibe error aunque el reporte quedó creado.
 - Migración local: red Podman `sdd002` + contenedor `sdd002-pg` (postgres:16, admin/admin-local-only, base reportes); `--migrar` con `-e Migracion__*` en array zsh (`"${M[@]}"`) y `Migracion__SslMode=Disable`.
 - dotnet-ef 10.0.4 en `/tmp/tools` del contenedor; necesita `ConnectionStrings__Postgres`, `Geoespacial__BaseUrl`, `Multimedia__BaseUrl`, `RabbitMq__Host` de relleno.
+- IT local: `scratchpad/it.sh [filtro]` (contenedores `sdd002-pg` y `sdd002-rmq` ci/ci-only en la red `sdd002`); base ya migrada con --migrar.
 - `--migrar` no construye el host web: el despachador no corre ahí.
 - Hooks del arnés usan `powershell` (no instalado en este Mac): el protocolo se sigue a mano.
 
