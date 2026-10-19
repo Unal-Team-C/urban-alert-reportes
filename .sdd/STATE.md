@@ -7,12 +7,12 @@
 
 feature_activa: 003-captcha-creacion
 fase: implement
-tarea_actual: T005
+tarea_actual: T006
 estado_tarea: -
 
 ## Siguiente paso
 
-T005: documentar secreto de arranque, orden de activación, configuración y coste.
+T006: comprobación completa (base nueva + --migrar + IT, unitarias Release, Terraform de los tres stacks, diff sin .github).
 
 ## Contexto de trabajo
 

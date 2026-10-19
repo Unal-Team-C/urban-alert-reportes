@@ -19,7 +19,7 @@ Herramientas: `$DOTNET` e `$IT` como en la 002; `$TF` = `podman run --rm -v "$PW
 
 ## Fase 3: Pulido
 
-- [ ] T005 Documentar: arranque del secreto (comando, formato JSON, permisos), orden de activación (primero el portal, después el servicio), configuración y comportamiento en README, docs/funcionamiento.md y CLAUDE.md; coste del secreto — archivos: infra/bootstrap/README.md, README.md, docs/funcionamiento.md, CLAUDE.md — cubre: RNF-002, D-002 — verifica: revisión cruzada de las claves con appsettings y las variables de Terraform
+- [x] T005 Documentar: arranque del secreto (comando, formato JSON, permisos), orden de activación (primero el portal, después el servicio), configuración y comportamiento en README, docs/funcionamiento.md y CLAUDE.md; coste del secreto — archivos: infra/bootstrap/README.md, README.md, docs/funcionamiento.md, CLAUDE.md — cubre: RNF-002, D-002 — verifica: revisión cruzada de las claves con appsettings y las variables de Terraform
 - [ ] T006 Comprobación completa: base nueva + `--migrar` + IT, unitarias, Terraform de los tres stacks y diff sin `.github/` — cubre: P6 — verifica: todo en verde
 
 ## Correcciones de verificación

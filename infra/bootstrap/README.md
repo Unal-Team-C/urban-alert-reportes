@@ -62,3 +62,22 @@ El resto de la configuración (nombres, tamaños, ARN del bus, bucket) está en 
 aws ecr describe-repositories --repository-names urban-alert-reportes --region us-east-2   # debe responder RepositoryNotFoundException
 aws events describe-event-bus --name urban-alert-bus-eventos --region us-east-2              # debe responder con su Arn
 ```
+
+## 5. Verificación humana (captcha, spec 003): secreto de Turnstile
+
+Opcional. Solo hace falta para activar `captcha_habilitado` en `infra/service/terraform.tfvars`. El secreto lo crea el equipo, porque su valor viene de Cloudflare y debe sobrevivir a un Deprovision (plan 003 D-002). Terraform solo lo lee.
+
+1. En el panel de Cloudflare, en **Turnstile → Add widget**: nombre `urban-alert`, dominios = el de CloudFront del portal (`dfa8690dowmry.cloudfront.net`) y `localhost`, modo **Managed**. Copia la *site key* (pública, para el portal) y la *secret key*.
+2. Crea el secreto con la *secret key*, sin dejarla en el historial de la terminal:
+
+   ```bash
+   read -rs CLAVE && printf '{"clave_secreta":"%s"}' "$CLAVE" > /tmp/captcha.json && unset CLAVE
+   aws secretsmanager create-secret --name urban-alert-reportes-captcha --region us-east-2 \
+     --description "Turnstile secret key of urban-alert-reportes (spec 003)" --secret-string file:///tmp/captcha.json
+   rm /tmp/captcha.json
+   ```
+
+   Para rotarla: `aws secretsmanager put-secret-value --secret-id urban-alert-reportes-captcha --secret-string file:///tmp/captcha.json`, y después un Provision, porque las tareas leen el secreto al arrancar.
+3. **Orden de activación**: primero el portal (`urban-alert-web`, variable `TURNSTILE_SITE_KEY` y un Provision). Después, aquí, `captcha_habilitado = true` y `captcha_hostnames = ["<dominio de CloudFront>"]` en `infra/service/terraform.tfvars`, en un commit a `main`. Si se activa antes, el portal recibe 400 en todas las creaciones.
+
+Permisos: el rol de ejecución ya lee `urban-alert-reportes-*`, y el rol de los workflows ya puede describir secretos `urban-alert-*`. No hay políticas nuevas.

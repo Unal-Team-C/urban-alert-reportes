@@ -239,3 +239,8 @@
 - infra/service: variables captcha_habilitado (false), captcha_hostnames ([]), captcha_accion (crear-reporte); data aws_secretsmanager_secret.captcha (count, nombre urban-alert-reportes-captcha) solo si está activo; dynamic secret Captcha__ClaveSecreta = <arn>:clave_secreta::; Captcha__Habilitado/Accion/HostnamesPermitidos__N. tfvars con la verificación desactivada.
 - Permisos: el rol de los workflows ya tiene DescribeSecret/GetResourcePolicy sobre urban-alert-* (políticas de arranque de Geoespacial); el rol de ejecución ya lee urban-alert-reportes-*.
 - validate OK; terraform test 9/9 (2 nuevos); fmt limpio. Gotcha: TF_DATA_DIR temporal por un symlink en .terraform.
+
+## 2026-10-19 · 003-captcha-creacion · T005 hecha
+- infra/bootstrap/README.md §5: crear el widget en Cloudflare (dominios CloudFront + localhost), crear/rotar el secreto {clave_secreta} sin dejarlo en el historial, orden de activación (portal primero) y permisos existentes.
+- README: claves Captcha:* y Resiliencia:Captcha, comportamiento 400/503, claves de prueba de Cloudflare; coste (+0,4 USD con captcha, Turnstile 0). docs/funcionamiento.md: sección Verificación humana, flujo de creación y brecha de rutas de modificación. CLAUDE.md: gotchas.
+- Revisión cruzada: todas las claves Captcha:* y las variables captcha_* documentadas.
