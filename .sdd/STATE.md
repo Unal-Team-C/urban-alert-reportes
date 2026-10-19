@@ -7,12 +7,12 @@
 
 feature_activa: 002-resiliencia-eventos
 fase: implement
-tarea_actual: T011
+tarea_actual: T012
 estado_tarea: -
 
 ## Siguiente paso
 
-T011: README (configuración Outbox/Resiliencia, comportamiento), docs/funcionamiento.md (quitar brecha del outbox, describir outbox y políticas, saga como brecha), CLAUDE.md (gotcha MaxRetryAttempts y Outbox).
+T012: comprobación completa: base nueva + --migrar + IT, unitarias, git diff origin/main sin infra/ ni .github/.
 
 ## Contexto de trabajo
 

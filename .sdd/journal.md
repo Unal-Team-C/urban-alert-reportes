@@ -194,3 +194,8 @@
 - Hallazgo y corrección: Polly exige MaxRetryAttempts ≥ 1 (ValidationException con Reintentos=0): ahora Reintentos=0 omite la estrategia; ResilienciaOpciones valida rangos.
 - RF-013 en dependencias: logs de reintento/circuito por la telemetría de Microsoft.Extensions.Resilience (no se aserta).
 - UnitTests 107/107; IT 83/83.
+
+## 2026-10-19 · 002-resiliencia-eventos · T011 hecha
+- docs/funcionamiento.md: flujo de creación con guardado atómico; sección «Entrega de eventos (outbox)» (despachador, estados, backoff, SKIP LOCKED, al menos una vez, consultas SQL); resiliencia de Geoespacial/Multimedia; brecha del outbox sustituida por saga y FALLIDO sin reproceso/alarmas.
+- README: claves Outbox:* y Resiliencia:* en la tabla de configuración; EventBridge rechazado → reintento del outbox; specs 001 y 002. CLAUDE.md: gotchas de outbox, Polly MaxRetryAttempts y colección sin paralelismo.
+- Revisión cruzada: todas las claves de appsettings Outbox/Resiliencia aparecen en docs y en el código.
