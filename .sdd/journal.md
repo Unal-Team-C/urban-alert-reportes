@@ -153,3 +153,9 @@
 ## 2026-10-19 · 002-resiliencia-eventos · T002 hecha
 - IEventPublisher.PublicarAsync(object, ct). EventBridge: DetailType y Serialize con evento.GetType(); cliente con Timeout 5 s y MaxErrorRetry 2 (D-007). MassTransit: Publish(evento, evento.GetType()).
 - Prueba nueva de no regresión (object vs tipado: mismo DetailType/Source/Detail); la de formato del Detail sigue pasando. UnitTests 87/87; solución compila.
+
+## 2026-10-19 · 002-resiliencia-eventos · T003 hecha
+- MensajeOutbox (Crear/MarcarEntregado/RegistrarFallo con backoff min(2^n s, 5 min) y FALLIDO en maxIntentos; error recortado a 2000), EstadoMensajeOutbox con CodigoEnumConverter, configuración (jsonb, índice parcial IX_MensajesOutbox_Pendientes), DbSet.
+- SerializacionEventos (opciones Web + códigos, tipos conocidos sin reflexión); EventBridgeEventPublisher reutiliza sus opciones.
+- Desviación registrada en plan D-002: IEventoDominio { IdEvento } en lugar de object.
+- UnitTests 95/95.

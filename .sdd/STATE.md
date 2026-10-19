@@ -7,12 +7,12 @@
 
 feature_activa: 002-resiliencia-eventos
 fase: implement
-tarea_actual: T003
+tarea_actual: T004
 estado_tarea: -
 
 ## Siguiente paso
 
-T003: MensajeOutbox + EstadoMensajeOutbox, MensajeOutboxConfiguration (tabla MensajesOutbox, índice parcial), DbSet, SerializacionEventos con registro de tipos (ReporteCreadoEvent) y prueba de ida y vuelta.
+T004: generar migración AgregarOutbox con dotnet-ef 10.0.4 en el contenedor SDK; verificar con --migrar sobre base vacía (tabla + índice) y 0 pendientes al repetir.
 
 ## Contexto de trabajo
 

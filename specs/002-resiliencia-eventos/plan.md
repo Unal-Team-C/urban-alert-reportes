@@ -128,6 +128,7 @@ Tabla `MensajesOutbox`:
 - **Decisión**: `IReporteRepository.AgregarAsync(reporte, eventoCreacion, ct)`.
 - **Alternativas**: un `IOutbox.Registrar(evento)` que dependa de que el siguiente `SaveChanges` del mismo `DbContext` lo confirme. El acoplamiento queda implícito y es fácil romperlo.
 - **Motivo**: la firma obliga a guardar ambos juntos y la prueba unitaria lo verifica.
+- **Ajuste en T003 (2026-10-19)**: el evento se tipa con una interfaz mínima `IEventoDominio { Guid IdEvento }` (en Application) en lugar de `object`: la fila usa `IdEvento` como clave y solo se aceptan eventos con identificador. `ReporteCreadoEvent` ya tenía la propiedad.
 
 ### D-003: `IEventPublisher` no genérico
 - **Decisión**: `PublicarAsync(object evento, CancellationToken)`. EventBridge toma `evento.GetType()` para `DetailType` y la serialización; MassTransit usa `Publish(evento, evento.GetType())`.
