@@ -159,3 +159,7 @@
 - SerializacionEventos (opciones Web + códigos, tipos conocidos sin reflexión); EventBridgeEventPublisher reutiliza sus opciones.
 - Desviación registrada en plan D-002: IEventoDominio { IdEvento } en lugar de object.
 - UnitTests 95/95.
+
+## 2026-10-19 · 002-resiliencia-eventos · T004 hecha
+- Migración 20261019150110_AgregarOutbox (dotnet-ef 10.0.4): tabla MensajesOutbox + IX_MensajesOutbox_Pendientes (parcial PENDIENTE). Down: DropTable.
+- Verificado: --migrar sobre base vacía aplicó 7 migraciones y sincronizó reportes_app (INSERT/UPDATE/SELECT sobre MensajesOutbox = t); segunda ejecución: 0 pendientes.

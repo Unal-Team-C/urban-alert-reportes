@@ -1,8 +1,9 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Amazon.EventBridge;
 using Amazon.EventBridge.Model;
+using Application.Comun;
 using Application.Interfaces.Eventos;
-using Infrastructure.Mensajeria.Outbox;
 
 namespace Infrastructure.Mensajeria;
 
@@ -14,6 +15,11 @@ public sealed record EventBridgeOpciones(string Bus);
 public class EventBridgeEventPublisher(IAmazonEventBridge eventBridge, EventBridgeOpciones opciones) : IEventPublisher
 {
     public const string Source = "urban-alert.reportes";
+
+    private static readonly JsonSerializerOptions OpcionesJson = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter(CodigoEnum.Politica, allowIntegerValues: false) }
+    };
 
     public async Task PublicarAsync(object evento, CancellationToken cancellationToken)
     {
@@ -27,7 +33,7 @@ public class EventBridgeEventPublisher(IAmazonEventBridge eventBridge, EventBrid
                     EventBusName = opciones.Bus,
                     Source = Source,
                     DetailType = TipoDeDetalle(tipo),
-                    Detail = JsonSerializer.Serialize(evento, tipo, SerializacionEventos.Opciones)
+                    Detail = JsonSerializer.Serialize(evento, tipo, OpcionesJson)
                 }
             ]
         };
