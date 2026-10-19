@@ -21,8 +21,9 @@ public class EventBridgeEventPublisher(IAmazonEventBridge eventBridge, EventBrid
         Converters = { new JsonStringEnumConverter(CodigoEnum.Politica, allowIntegerValues: false) }
     };
 
-    public async Task PublicarAsync<TEvento>(TEvento evento, CancellationToken cancellationToken) where TEvento : class
+    public async Task PublicarAsync(object evento, CancellationToken cancellationToken)
     {
+        Type tipo = evento.GetType();
         PutEventsRequest solicitud = new()
         {
             Entries =
@@ -31,8 +32,8 @@ public class EventBridgeEventPublisher(IAmazonEventBridge eventBridge, EventBrid
                 {
                     EventBusName = opciones.Bus,
                     Source = Source,
-                    DetailType = TipoDeDetalle(typeof(TEvento)),
-                    Detail = JsonSerializer.Serialize(evento, OpcionesJson)
+                    DetailType = TipoDeDetalle(tipo),
+                    Detail = JsonSerializer.Serialize(evento, tipo, OpcionesJson)
                 }
             ]
         };

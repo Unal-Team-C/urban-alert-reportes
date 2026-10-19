@@ -149,3 +149,7 @@
 
 ## 2026-10-19 · 002-resiliencia-eventos · T001 hecha
 - Microsoft.Extensions.Http.Resilience 10.10.0 sin conflicto con Microsoft.Extensions.Http 10.0.12 (no hizo falta subirlo). Build 0 errores/0 advertencias; UnitTests 86/86.
+
+## 2026-10-19 · 002-resiliencia-eventos · T002 hecha
+- IEventPublisher.PublicarAsync(object, ct). EventBridge: DetailType y Serialize con evento.GetType(); cliente con Timeout 5 s y MaxErrorRetry 2 (D-007). MassTransit: Publish(evento, evento.GetType()).
+- Prueba nueva de no regresión (object vs tipado: mismo DetailType/Source/Detail); la de formato del Detail sigue pasando. UnitTests 87/87; solución compila.

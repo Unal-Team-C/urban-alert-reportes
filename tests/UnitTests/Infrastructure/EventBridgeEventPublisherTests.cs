@@ -56,6 +56,24 @@ public class EventBridgeEventPublisherTests
         Assert.Equal(new DateTime(2026, 10, 11, 15, 30, 0, DateTimeKind.Utc), reporte.GetProperty("fecha").GetDateTime());
     }
 
+    // No regresión (spec 002 RF-006): el despachador del outbox publica el evento como object.
+    [Fact]
+    public async Task PublicarAsync_ComoObject_EnviaElMismoDetailTypeYDetail()
+    {
+        EventBridgeFalso tipado = new();
+        EventBridgeFalso comoObject = new();
+
+        await new EventBridgeEventPublisher(tipado, new EventBridgeOpciones(Bus)).PublicarAsync(Evento(), CancellationToken.None);
+        object evento = Evento();
+        await new EventBridgeEventPublisher(comoObject, new EventBridgeOpciones(Bus)).PublicarAsync(evento, CancellationToken.None);
+
+        PutEventsRequestEntry esperado = tipado.Solicitudes[0].Entries[0];
+        PutEventsRequestEntry obtenido = comoObject.Solicitudes[0].Entries[0];
+        Assert.Equal("ReporteCreado", obtenido.DetailType);
+        Assert.Equal(esperado.Source, obtenido.Source);
+        Assert.Equal(esperado.Detail, obtenido.Detail);
+    }
+
     [Fact]
     public async Task PublicarAsync_FallaSiEventBridgeRechazaLaEntrada()
     {

@@ -245,7 +245,7 @@ public class CrearReporteHandlerTests
     {
         public List<object> Eventos { get; } = [];
 
-        public Task PublicarAsync<TEvento>(TEvento evento, CancellationToken cancellationToken) where TEvento : class
+        public Task PublicarAsync(object evento, CancellationToken cancellationToken)
         {
             Eventos.Add(evento);
             return Task.CompletedTask;

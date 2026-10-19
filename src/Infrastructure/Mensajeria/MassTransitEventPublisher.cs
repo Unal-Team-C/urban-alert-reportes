@@ -5,6 +5,6 @@ namespace Infrastructure.Mensajeria;
 
 public class MassTransitEventPublisher(IPublishEndpoint publishEndpoint) : IEventPublisher
 {
-    public Task PublicarAsync<TEvento>(TEvento evento, CancellationToken cancellationToken) where TEvento : class =>
-        publishEndpoint.Publish(evento, cancellationToken);
+    public Task PublicarAsync(object evento, CancellationToken cancellationToken) =>
+        publishEndpoint.Publish(evento, evento.GetType(), cancellationToken);
 }

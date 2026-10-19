@@ -112,7 +112,8 @@ public static class DependencyInjection
         // Región de AWS_REGION (variable de entorno o configuración); credenciales de la cadena por defecto
         // del SDK (rol de tarea en ECS), salvo que haya unas registradas (pruebas).
         string? region = configuration["AWS_REGION"];
-        AmazonEventBridgeConfig configEventBridge = new();
+        // Timeout corto: el despachador del outbox publica dentro de una transacción por lote (plan D-007).
+        AmazonEventBridgeConfig configEventBridge = new() { Timeout = TimeSpan.FromSeconds(5), MaxErrorRetry = 2 };
         if (!string.IsNullOrWhiteSpace(region))
             configEventBridge.RegionEndpoint = RegionEndpoint.GetBySystemName(region);
 

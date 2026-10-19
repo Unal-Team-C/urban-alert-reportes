@@ -7,12 +7,12 @@
 
 feature_activa: 002-resiliencia-eventos
 fase: implement
-tarea_actual: T002
+tarea_actual: T003
 estado_tarea: -
 
 ## Siguiente paso
 
-T002: IEventPublisher no genérico (object); EventBridge con GetType() y timeout 5 s; MassTransit Publish(evento, tipo); ajustar pruebas y añadir no regresión de DetailType/Detail.
+T003: MensajeOutbox + EstadoMensajeOutbox, MensajeOutboxConfiguration (tabla MensajesOutbox, índice parcial), DbSet, SerializacionEventos con registro de tipos (ReporteCreadoEvent) y prueba de ida y vuelta.
 
 ## Contexto de trabajo
 
