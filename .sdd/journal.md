@@ -179,3 +179,8 @@
 - DespachadorOutboxTests: bus caído → 201, PENDIENTE con Intentos=1 y UltimoError, sin reintento antes del backoff, ENTREGADO al recuperarse (publicado 1 vez); FALLIDO tras 3 intentos sin bloquear al sano y log Error (RF-013); 2 despachadores concurrentes con 30 eventos → cada uno publicado exactamente una vez (SKIP LOCKED).
 - DespachadorEnSegundoPlanoTests: host real + RabbitMQ, entregado en < 5 s (RNF-001).
 - IT 83/83 tres corridas seguidas.
+
+## 2026-10-19 · 002-resiliencia-eventos · T008 hecha
+- src/Infrastructure/Resiliencia/PoliticasHttp.cs: ResilienciaOpciones (Resiliencia:<dep>:*, valores de la spec, TimeoutTotalSegundos 12) y AgregarResiliencia{Geoespacial,Multimedia}: Retry (exponencial, jitter, 200 ms, ShouldRetryAfterHeader=false) → CircuitBreaker (50 %/30 s/mín. 5/15 s) → Timeout por intento. Multimedia: ShouldHandle del retry = solo HttpRequestError.ConnectionError/NameResolutionError.
+- DI: pipeline antes del AwsSignatureHandler (se firma en cada intento); HttpClient.Timeout = tope total. appsettings Resiliencia:*.
+- Build 0/0.

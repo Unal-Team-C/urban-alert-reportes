@@ -7,12 +7,12 @@
 
 feature_activa: 002-resiliencia-eventos
 fase: implement
-tarea_actual: T008
+tarea_actual: T009
 estado_tarea: -
 
 ## Siguiente paso
 
-T008: PoliticasHttp con pipelines de Geoespacial (Retry ×2 exponencial con jitter → CircuitBreaker → Timeout por intento) y Multimedia (retry solo ConnectionError/NameResolutionError), opciones Resiliencia:*, conectados en DI antes del AwsSignatureHandler; HttpClient.Timeout = 12 s.
+T009: en GeoespacialHttpClient y MultimediaHttpClient capturar BrokenCircuitException y TimeoutRejectedException → excepciones de no disponible (503).
 
 ## Contexto de trabajo
 
