@@ -15,7 +15,7 @@ Herramientas: `$DOTNET` e `$IT` como en la 002; `$TF` = `podman run --rm -v "$PW
 
 ## Fase 2: Integración
 
-- [ ] T004 Terraform: `captcha_habilitado`, `captcha_hostnames`, `captcha_accion`; `data` del secreto de arranque y bloque `secret`/variables solo si está activo; dos `run` en service.tftest.hcl — archivos: infra/service/main.tf, infra/service/variables.tf, infra/service/terraform.tfvars, infra/service/tests/service.tftest.hcl — cubre: RF-008, P7 — verifica: `$TF -chdir=infra/service init -backend=false`, `validate`, `test` en verde y `fmt -check -recursive infra` limpio
+- [x] T004 Terraform: `captcha_habilitado`, `captcha_hostnames`, `captcha_accion`; `data` del secreto de arranque y bloque `secret`/variables solo si está activo; dos `run` en service.tftest.hcl — archivos: infra/service/main.tf, infra/service/variables.tf, infra/service/terraform.tfvars, infra/service/tests/service.tftest.hcl — cubre: RF-008, P7 — verifica: `$TF -chdir=infra/service init -backend=false`, `validate`, `test` en verde y `fmt -check -recursive infra` limpio
 
 ## Fase 3: Pulido
 

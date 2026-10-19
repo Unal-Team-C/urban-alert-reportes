@@ -35,6 +35,22 @@ locals {
     Mensajeria__Transporte = "EventBridge"
     EventBridge__Bus       = local.base.event_bus_arn
   }
+
+  # Human verification (spec 003): only when enabled; one variable per allowed hostname (.NET list binding).
+  captcha_environment = var.captcha_habilitado ? merge(
+    {
+      Captcha__Habilitado = "true"
+      Captcha__Accion     = var.captcha_accion
+    },
+    { for i, hostname in var.captcha_hostnames : "Captcha__HostnamesPermitidos__${i}" => hostname }
+  ) : {}
+}
+
+# Bootstrap secret {"clave_secreta": "..."} created by the team outside this state (plan D-002): it comes from
+# Cloudflare and must survive a deprovision. Read only when the verification is enabled.
+data "aws_secretsmanager_secret" "captcha" {
+  count = var.captcha_habilitado ? 1 : 0
+  name  = "${local.base.name}-captcha"
 }
 
 # ECS Express Mode adds this service's rule to the internal load balancer it shares in the VPC and manages the
@@ -66,7 +82,7 @@ resource "aws_ecs_express_gateway_service" "this" {
     }
 
     dynamic "environment" {
-      for_each = local.environment
+      for_each = merge(local.environment, local.captcha_environment)
 
       content {
         name  = environment.key
@@ -78,6 +94,16 @@ resource "aws_ecs_express_gateway_service" "this" {
     secret {
       name       = "ConnectionStrings__Postgres"
       value_from = "${local.base.app_secret_arn}:connection_string::"
+    }
+
+    # Turnstile secret key (spec 003 RF-008), only when the verification is enabled.
+    dynamic "secret" {
+      for_each = data.aws_secretsmanager_secret.captcha
+
+      content {
+        name       = "Captcha__ClaveSecreta"
+        value_from = "${secret.value.arn}:clave_secreta::"
+      }
     }
   }
 

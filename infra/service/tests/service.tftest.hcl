@@ -149,3 +149,56 @@ run "endpoint_is_a_bare_host" {
     error_message = "service_endpoint must be the host only (no scheme, no trailing slash)."
   }
 }
+
+run "captcha_disabled_by_default" {
+  command = plan
+
+  assert {
+    condition     = length(data.aws_secretsmanager_secret.captcha) == 0
+    error_message = "With the verification off, the bootstrap secret is not read (spec 003 RF-007)."
+  }
+
+  assert {
+    condition     = length([for s in aws_ecs_express_gateway_service.this.primary_container[0].secret : s if s.name == "Captcha__ClaveSecreta"]) == 0
+    error_message = "With the verification off, the task gets no Turnstile secret."
+  }
+
+  assert {
+    condition     = length([for e in aws_ecs_express_gateway_service.this.primary_container[0].environment : e if startswith(e.name, "Captcha__")]) == 0
+    error_message = "With the verification off, no Captcha__ variable is set (the API default is disabled)."
+  }
+}
+
+run "captcha_enabled_reads_the_bootstrap_secret" {
+  command = plan
+
+  variables {
+    captcha_habilitado = true
+    captcha_hostnames  = ["dfa8690dowmry.cloudfront.net"]
+  }
+
+  override_data {
+    target = data.aws_secretsmanager_secret.captcha[0]
+    values = { arn = "arn:aws:secretsmanager:us-east-2:348364742283:secret:urban-alert-reportes-captcha-XyZ123" }
+  }
+
+  assert {
+    condition     = data.aws_secretsmanager_secret.captcha[0].name == "urban-alert-reportes-captcha"
+    error_message = "The secret is the bootstrap one of this service (plan D-002, P9 prefix)."
+  }
+
+  assert {
+    condition = contains([for s in aws_ecs_express_gateway_service.this.primary_container[0].secret : "${s.name}=${s.value_from}"],
+    "Captcha__ClaveSecreta=arn:aws:secretsmanager:us-east-2:348364742283:secret:urban-alert-reportes-captcha-XyZ123:clave_secreta::")
+    error_message = "The Turnstile secret key comes from the clave_secreta key of the bootstrap secret, never from a variable."
+  }
+
+  assert {
+    condition = length(setsubtract([
+      "Captcha__Habilitado=true",
+      "Captcha__Accion=crear-reporte",
+      "Captcha__HostnamesPermitidos__0=dfa8690dowmry.cloudfront.net",
+    ], [for e in aws_ecs_express_gateway_service.this.primary_container[0].environment : "${e.name}=${e.value}"])) == 0
+    error_message = "Enabled verification must set the flag, the action and the allowed hostname."
+  }
+}

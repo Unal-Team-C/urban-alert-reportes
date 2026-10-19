@@ -234,3 +234,8 @@
 ## 2026-10-19 · 003-captcha-creacion · T003 hecha
 - captchaToken opcional en CrearReporteRequest y CrearReporteConImagenRequest; el controlador lo pasa al comando; descripciones OpenAPI actualizadas. Middleware: CaptchaInvalidoException → 400 (mensaje genérico, el motivo solo en el log), CaptchaNoDisponibleException → 503.
 - IT CaptchaEndpointsTests (CaptchaApiFactory con Captcha:Habilitado=true y verificador controlable): JSON válido 201, sin token/falso 400 con mensaje, multipart válido 201, multipart sin token 400, proveedor caído 503. Las 83 anteriores (desactivado) sin cambios: IT 89/89.
+
+## 2026-10-19 · 003-captcha-creacion · T004 hecha
+- infra/service: variables captcha_habilitado (false), captcha_hostnames ([]), captcha_accion (crear-reporte); data aws_secretsmanager_secret.captcha (count, nombre urban-alert-reportes-captcha) solo si está activo; dynamic secret Captcha__ClaveSecreta = <arn>:clave_secreta::; Captcha__Habilitado/Accion/HostnamesPermitidos__N. tfvars con la verificación desactivada.
+- Permisos: el rol de los workflows ya tiene DescribeSecret/GetResourcePolicy sobre urban-alert-* (políticas de arranque de Geoespacial); el rol de ejecución ya lee urban-alert-reportes-*.
+- validate OK; terraform test 9/9 (2 nuevos); fmt limpio. Gotcha: TF_DATA_DIR temporal por un symlink en .terraform.
