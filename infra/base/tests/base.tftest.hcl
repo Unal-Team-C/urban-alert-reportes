@@ -333,30 +333,3 @@ run "backups_below_seven_days_are_rejected" {
 
   expect_failures = [var.db_backup_retention_days]
 }
-
-run "running_by_default" {
-  command = plan
-
-  assert {
-    condition     = aws_rds_instance_state.this.state == "available" && aws_rds_instance_state.this.identifier == aws_db_instance.this.identifier
-    error_message = "By default the database must be running (Provision starts a paused instance)."
-  }
-}
-
-run "pausada_stops_the_database_and_keeps_it" {
-  command = plan
-
-  variables {
-    pausada = true
-  }
-
-  assert {
-    condition     = aws_rds_instance_state.this.state == "stopped"
-    error_message = "pausada = true must stop the RDS instance."
-  }
-
-  assert {
-    condition     = aws_db_instance.this.deletion_protection && !aws_db_instance.this.skip_final_snapshot
-    error_message = "A paused database keeps its deletion protection and final snapshot."
-  }
-}

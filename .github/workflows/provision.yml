@@ -149,6 +149,10 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
           terraform_wrapper: false
 
+      # After a pause the instance is stopped (Pausar stops it with the same script).
+      - name: Start the RDS instance if it is stopped (after a pause)
+        run: scripts/rds-estado.sh arrancar urban-alert-reportes-db
+
       - name: Apply base (ECR, roles, security groups, RDS, secret, logs, migration task)
         run: |
           terraform -chdir=infra/base init -input=false

@@ -115,9 +115,3 @@ variable "container_port" {
   type        = number
   default     = 8080
 }
-
-variable "pausada" {
-  description = "Only the Pausar workflow sets it to true: stops the RDS instance (data and storage are kept). Provision leaves it false, which starts a stopped instance before deploying."
-  type        = bool
-  default     = false
-}
