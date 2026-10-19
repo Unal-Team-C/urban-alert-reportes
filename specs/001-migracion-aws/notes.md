@@ -20,3 +20,18 @@ Para `/sdd-plan` (no son requisitos):
 - Rutas gateway: `ANY /api/v1/reportes` y `ANY /api/v1/reportes/{proxy+}` → `/api/v1/Reportes` y `/api/v1/Reportes/{proxy}` (o por método si las escrituras van con IAM).
 - Límite del gateway: 10 MB por petición (HTTP API); imágenes mayores → 413 del gateway.
 - Auditoria lee la tabla `Reportes` en local con `reportes_reader` (`UrbanAlert/infrastructure/postgres-reportes/01-auditoria.sh`).
+
+## Aparcado 2026-10-19
+
+- **Fase**: implement · **Tarea actual**: T032 (bloqueada).
+- **Siguiente paso**: T032: segundo Provision sin cambios de infraestructura (lo dispara el merge de este registro, rama verify/primer-provision); esperar 0 cambios en base/routes y solo imagen/task definition/servicio por el SHA nuevo. Después /sdd-verify (crear-reporte-prueba completo cuando Multimedia vuelva).
+- **Contexto de trabajo**:
+  - iCloud Drive crea copias "archivo 2.ext" en el repo (conflictos de sincronización): rompen el build .NET (tipos duplicados). Ignoradas en .gitignore; las halladas se movieron al scratchpad (duplicados-icloud).
+  - Referencias: `../Microservicio usuarios` (spec 001, infra/{base,service,routes}, scripts, workflows: el más parecido), `../Microservicio geoespacial AWS`, `../FaaS multimedia/Urban-Alert-multimedia` (infra/rutas), `../Plataforma compartida AWS` (docs/integracion.md).
+  - Geoespacial: `POST /api/v1/geoespacial/coordinates` es AWS_IAM (Reportes firma). Multimedia: `POST /api/v1/multimedia/images` pública (AWS_PROXY 2.0).
+  - Bus de EventBridge creado a mano, en ningún repo (dicho por el usuario). No hay AWS CLI local para inspeccionarlo.
+  - Auditoria (github Unal-Team-C/urban-alert-auditoria) aún consume por MassTransit/RabbitMQ; clon de lectura en el scratchpad de la sesión.
+  - Hooks del arnés usan `powershell` (no instalado en este Mac): el protocolo se sigue a mano.
+- **Bloqueos**:
+  - Multimedia responde 503 directamente por el gateway (también GET metadata): su backend (DocumentDB) no está disponible. Fuera de este repo; bloquea solo la parte de imagen de MS-002.
+  - T032 necesita un push a main (merge de verify/primer-provision).

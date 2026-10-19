@@ -129,3 +129,20 @@
 - base: 3 reemplazados (random_password, versión del secreto, task definition de migración: rotación); imagen reutilizada (mismo SHA? no: tag del merge #2 ya existía por el run fallido? → "already exists"); migración: 0 pendientes (el run fallido ya había migrado antes del error del rol) y rol sincronizado; service +1; routes +4; humo 9/9 (primer intento 404 mientras se propagaban las rutas).
 - crear-reporte-prueba.sh: JSON 201 con idCoordenada de Geoespacial (firma SigV4 OK) y PutEvents sin error; DELETE 204. Multipart 503: Multimedia devuelve 503 también llamado directamente (POST images y GET metadata) → problema de Multimedia, no de Reportes; Reportes lo traduce bien (503 MultimediaNoDisponible).
 - Corrección de la entrada anterior: la imagen sí se construyó y publicó con el SHA d75ef71 (solo se reutilizaron capas); la línea "already exists" era el texto del script, no su ejecución.
+
+## 2026-10-19 · general · Cambio de feature 001-migracion-aws → 002-resiliencia-eventos
+- 001 aparcada en implement (T032 bloqueada); contexto en specs/001-migracion-aws/notes.md §Aparcado 2026-10-19. Rama 002-resiliencia-eventos desde origin/main c5f09ab.
+
+## 2026-10-19 · 002-resiliencia-eventos · Creada spec desde descripción
+- Debilidades 3 (sin outbox: reporte guardado sin evento) y 4 (Geoespacial/Multimedia solo con timeout) del análisis de QAS-02 y QAS-04.1. HU-1 entrega garantizada del evento (P1), HU-2 reintentos ante fallos transitorios (P1), HU-3 circuito con fallo rápido (P2). 13 RF, 6 RNF.
+- 1 [NEEDS CLARIFICATION]: política de reintento de Multimedia (su subida no es idempotente).
+
+## 2026-10-19 · 002-resiliencia-eventos · Spec aclarada y aprobada
+- RF-007 Multimedia: reintento solo si la conexión no se estableció; timeout/5xx sin reintento; circuito sí. Usuario aprueba la spec.
+
+## 2026-10-19 · 002-resiliencia-eventos · plan.md y tasks.md generados
+- D-001 outbox propio (no MassTransit: en AWS no hay MassTransit); D-002 atomicidad en IReporteRepository.AgregarAsync(reporte, evento); D-003 IEventPublisher no genérico; D-004 Microsoft.Extensions.Http.Resilience 10.10.0 (10.11.0 tiene 5 días); D-005 Multimedia reintenta solo ConnectionError/NameResolutionError; D-006 presupuesto ≈ 22 s < 25 s; D-007 transacción por lote con SKIP LOCKED.
+- 12 tareas: preparación 1, outbox 6, resiliencia 3, pulido 2. Sin cambios de Terraform.
+
+## 2026-10-19 · 002-resiliencia-eventos · Plan y tareas aprobados
+- El usuario aprueba plan.md y tasks.md; empieza la implementación por T001.
