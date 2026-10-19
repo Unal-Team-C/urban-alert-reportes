@@ -20,7 +20,7 @@ public sealed record ResilienciaOpciones(
     {
         IConfigurationSection seccion = configuration.GetSection($"Resiliencia:{dependencia}");
         ResilienciaOpciones porDefecto = new();
-        return new ResilienciaOpciones(
+        ResilienciaOpciones opciones = new(
             seccion.GetValue("Reintentos", porDefecto.Reintentos),
             seccion.GetValue("RetardoBaseMs", porDefecto.RetardoBaseMs),
             seccion.GetValue("RatioFallos", porDefecto.RatioFallos),
@@ -28,6 +28,12 @@ public sealed record ResilienciaOpciones(
             seccion.GetValue("MinimoLlamadas", porDefecto.MinimoLlamadas),
             seccion.GetValue("PausaSegundos", porDefecto.PausaSegundos),
             seccion.GetValue("TimeoutTotalSegundos", porDefecto.TimeoutTotalSegundos));
+
+        if (opciones.Reintentos < 0 || opciones.RetardoBaseMs < 1 || opciones.RatioFallos is <= 0 or > 1 ||
+            opciones.VentanaSegundos < 1 || opciones.MinimoLlamadas < 2 || opciones.PausaSegundos < 1 || opciones.TimeoutTotalSegundos < 1)
+            throw new InvalidOperationException($"Valores no válidos en 'Resiliencia:{dependencia}'.");
+
+        return opciones;
     }
 }
 
@@ -71,7 +77,9 @@ public static class PoliticasHttp
             if (soloSinConexion)
                 reintento.ShouldHandle = argumentos => ValueTask.FromResult(EsFalloDeConexion(argumentos.Outcome.Exception));
 
-            pipeline.AddRetry(reintento);
+            // Reintentos = 0 desactiva el reintento (la estrategia de Polly exige al menos 1); el circuito sigue.
+            if (opciones.Reintentos > 0)
+                pipeline.AddRetry(reintento);
             pipeline.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
             {
                 FailureRatio = opciones.RatioFallos,

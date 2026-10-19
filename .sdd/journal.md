@@ -188,3 +188,9 @@
 ## 2026-10-19 · 002-resiliencia-eventos · T009 hecha
 - GeoespacialHttpClient y MultimediaHttpClient: TimeoutRejectedException → 'no respondió a tiempo' y BrokenCircuitException → 'no disponible (circuito abierto)', ambas como excepciones de no disponible (503 por el middleware).
 - Build 0/0; UnitTests 96/96; IT 83/83. El comportamiento extremo a extremo lo prueba T010.
+
+## 2026-10-19 · 002-resiliencia-eventos · T010 hecha
+- tests/UnitTests/Infrastructure/PoliticasHttpTests.cs (11 casos, DI real + servidor y reloj falsos): Geoespacial reintenta 503 y tiene éxito; agota 2 reintentos (3 llamadas); 400 y 409 sin reintento; firma SigV4 en cada intento; circuito abre tras 5 fallos y responde 'circuito abierto' en < 50 ms sin llamar; half-open a los 15 s (reloj falso: Polly usa el TimeProvider de la DI) y cierra; Multimedia reintenta ConnectionError, no 503 ni timeout (timeout por intento configurable, 1 s); circuito de Geoespacial no afecta a Multimedia.
+- Hallazgo y corrección: Polly exige MaxRetryAttempts ≥ 1 (ValidationException con Reintentos=0): ahora Reintentos=0 omite la estrategia; ResilienciaOpciones valida rangos.
+- RF-013 en dependencias: logs de reintento/circuito por la telemetría de Microsoft.Extensions.Resilience (no se aserta).
+- UnitTests 107/107; IT 83/83.

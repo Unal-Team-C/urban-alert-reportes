@@ -7,12 +7,12 @@
 
 feature_activa: 002-resiliencia-eventos
 fase: implement
-tarea_actual: T010
+tarea_actual: T011
 estado_tarea: -
 
 ## Siguiente paso
 
-T010: tests/UnitTests/Infrastructure/PoliticasHttpTests.cs con la DI real (AddInfrastructure) y un handler primario falso: reintentos de Geoespacial, sin reintento 400/409, circuito abierto < 50 ms, half-open y cierre, firma por intento, Multimedia solo conexión, circuitos independientes.
+T011: README (configuración Outbox/Resiliencia, comportamiento), docs/funcionamiento.md (quitar brecha del outbox, describir outbox y políticas, saga como brecha), CLAUDE.md (gotcha MaxRetryAttempts y Outbox).
 
 ## Contexto de trabajo
 

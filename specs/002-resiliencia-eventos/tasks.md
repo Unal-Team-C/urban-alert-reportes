@@ -31,7 +31,7 @@ Dependencias: cada fase depende de la anterior; dentro de una fase se ejecuta en
 
 - [x] T008 Crear `PoliticasHttp` con los pipelines de Geoespacial (Retry ×2 exponencial con jitter → CircuitBreaker 50 %/30 s/mín. 5/pausa 15 s → Timeout por intento) y Multimedia (reintento solo con `ConnectionError`/`NameResolutionError`), configurables en `Resiliencia:*`. Conectarlos en DI antes del `AwsSignatureHandler`; `HttpClient.Timeout` pasa a ser un tope total de 12 s — archivos: src/Infrastructure/Resiliencia/PoliticasHttp.cs, src/Infrastructure/DependencyInjection.cs, src/API/appsettings.json — depende: T001 — cubre: RF-007, RF-009, RF-010, RF-011, RF-012, RNF-003 — verifica: `$DOTNET build` en verde
 - [x] T009 Traducir `BrokenCircuitException` y `TimeoutRejectedException` en `GeoespacialHttpClient` y `MultimediaHttpClient` a las excepciones de "no disponible" (503) — archivos: src/Infrastructure/Geoespacial/GeoespacialHttpClient.cs, src/Infrastructure/Multimedia/MultimediaHttpClient.cs — depende: T008 — cubre: RF-009 — verifica: el middleware devuelve 503 (prueba en T010)
-- [ ] T010 Pruebas de las políticas con un `HttpMessageHandler` falso y `TimeProvider` falso:
+- [x] T010 Pruebas de las políticas con un `HttpMessageHandler` falso y `TimeProvider` falso:
   - Geoespacial: reintenta 503 y luego responde bien; no reintenta 400 ni 409; el circuito abre tras 5 fallos y responde 503 en menos de 50 ms sin llamar; tras la pausa pasa a half-open y cierra; cada intento se firma de nuevo.
   - Multimedia: reintenta el error de conexión; no reintenta timeout ni 503.
   - Un circuito de Multimedia abierto no afecta a Geoespacial.
