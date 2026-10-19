@@ -9,4 +9,6 @@ public record CrearReporteRequest(
     double Latitud,
     double Longitud,
     string UrlImagen,
-    Guid? IdUsuario = null);
+    Guid? IdUsuario = null,
+    // Prueba de verificación humana del portal (spec 003); obligatoria solo si Captcha:Habilitado.
+    string? CaptchaToken = null);

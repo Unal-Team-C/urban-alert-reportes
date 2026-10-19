@@ -19,7 +19,15 @@ Endpoints expuestos por `ReportesController` (ver también `/scalar/v1` en Devel
 
 ## Flujo de creación
 
-`CrearReporteHandler` (`src/Application/Reportes/CrearReporte`) hace, en este orden: valida el reporte en memoria (dominio) antes de tocar red, sube la imagen a Multimedia si llegó como archivo, pide a Geoespacial que registre la coordenada y devuelva su id, y guarda en PostgreSQL, **en una sola transacción**, el reporte y su `ReporteCreadoEvent` en la tabla `MensajesOutbox` (outbox transaccional, spec 002). La respuesta 201 depende solo de ese guardado. El orden importa: si Geoespacial o Multimedia no responden (503), el reporte no se crea; si el guardado falla, no queda ni reporte ni evento.
+`CrearReporteHandler` (`src/Application/Reportes/CrearReporte`) hace, en este orden: verifica la prueba humana (spec 003, solo si `Captcha:Habilitado`), valida el reporte en memoria (dominio) antes de tocar red, sube la imagen a Multimedia si llegó como archivo, pide a Geoespacial que registre la coordenada y devuelva su id, y guarda en PostgreSQL, **en una sola transacción**, el reporte y su `ReporteCreadoEvent` en la tabla `MensajesOutbox` (outbox transaccional, spec 002). La respuesta 201 depende solo de ese guardado. El orden importa: si Geoespacial o Multimedia no responden (503), el reporte no se crea; si el guardado falla, no queda ni reporte ni evento.
+
+## Verificación humana (captcha)
+
+Con `Captcha:Habilitado=true`, `VerificadorTurnstile` (`src/Infrastructure/Captcha`) envía `captchaToken` y la clave secreta a `siteverify` de Cloudflare Turnstile antes de hacer cualquier otro trabajo. Responde **400** si el token falta, está vacío, tiene más de 2048 caracteres, es inválido, venció o ya se usó (`timeout-or-duplicate`), o si el `hostname` o la `action` no coinciden con los configurados. Responde **503** si Turnstile no responde, responde con error, devuelve algo ilegible o informa un error de configuración (`invalid-input-secret`). Es falla cerrado: nunca deja pasar una creación sin comprobar.
+
+El token es de un solo uso, así que el pipeline (`Resiliencia:Captcha`) solo reintenta si la conexión no se estableció. Sí tiene circuito con fallo rápido. Los rechazos quedan en el log con el código de Turnstile; nunca se registran el token ni la clave. Si la verificación está activa sin clave secreta, la API no arranca. Otras claves: `Captcha:TimeoutSegundos` (5, timeout por intento) y `Captcha:UrlVerificacion` (por defecto, la de Turnstile; solo se cambia en pruebas).
+
+Es un control antiabuso para la creación anónima. No autentica a nadie ni protege `PATCH`, `PUT` ni `DELETE` (ver brechas).
 
 ## Entrega de eventos (outbox)
 
@@ -66,6 +74,6 @@ La API no migra fuera de Development. En AWS, antes de cada despliegue, una tare
 
 - Sin compensación (saga) cuando la creación falla a medias: si la imagen ya se subió a Multimedia o la coordenada ya se registró en Geoespacial y después falla el guardado, esos recursos quedan huérfanos.
 - Los eventos `FALLIDO` del outbox no se reprocesan solos (solo quedan registrados) y no hay alarmas sobre ellos.
-- Sin autenticación/autorización real — `idUsuario` no es de confianza.
+- Sin autenticación/autorización real — `idUsuario` no es de confianza, y las rutas de modificación (`PATCH`, `PUT`, `DELETE`) son públicas. El captcha (spec 003) solo cubre la creación.
 - Solo se audita la creación de reportes (ver arriba); las demás operaciones no tienen contrato de evento.
 - `deploy/docker/docker-compose.yml` trae credenciales de PostgreSQL/RabbitMQ en texto plano, pensadas solo para desarrollo local.

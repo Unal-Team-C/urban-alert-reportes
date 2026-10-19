@@ -1,5 +1,7 @@
+using Application.Captcha;
 using Application.Geoespacial;
 using Application.Imagenes;
+using Application.Interfaces.Captcha;
 using Application.Interfaces.Eventos;
 using Application.Interfaces.Geoespacial;
 using Application.Interfaces.Multimedia;
@@ -17,8 +19,9 @@ public class CrearReporteHandlerTests
     private readonly RepositorioFalso _repositorio = new();
     private readonly GeoespacialFalso _geoespacial = new();
     private readonly MultimediaFalso _multimedia = new();
+    private readonly VerificadorFalso _verificador = new();
 
-    private CrearReporteHandler CrearHandler() => new(_repositorio, _geoespacial, _multimedia);
+    private CrearReporteHandler CrearHandler() => new(_repositorio, _geoespacial, _multimedia, _verificador);
 
     private static CrearReporteCommand ComandoValido() => new(
         CategoriaReporte.ViasYAndenes,
@@ -51,6 +54,45 @@ public class CrearReporteHandlerTests
         ReporteCreadoEvent evento = Assert.IsType<ReporteCreadoEvent>(Assert.Single(_repositorio.Eventos));
         Assert.Equal(idReporte, evento.Reporte.Id);
         Assert.Equal(_geoespacial.IdCoordenadaDevuelto, evento.Reporte.IdCoordenada);
+    }
+
+    [Fact]
+    public async Task Handle_VerificaElCaptchaConElTokenEnviado()
+    {
+        await CrearHandler().Handle(ComandoValido() with { CaptchaToken = "token-del-portal" }, CancellationToken.None);
+
+        Assert.Equal(["token-del-portal"], _verificador.Tokens);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Handle_SiElCaptchaFalla_NoLlamaANadieNiGuarda(bool invalido)
+    {
+        _verificador.ExcepcionALanzar = invalido
+            ? new CaptchaInvalidoException("invalid-input-response")
+            : new CaptchaNoDisponibleException("proveedor caído");
+        CrearReporteCommand comando = ComandoValido() with
+        {
+            UrlImagen = null,
+            Imagen = new ImagenAdjunta(new MemoryStream(ValidadorImagenTests.Png), ValidadorImagenTests.Png.Length, "foto.png")
+        };
+
+        await Assert.ThrowsAsync(_verificador.ExcepcionALanzar.GetType(), () => CrearHandler().Handle(comando, CancellationToken.None));
+
+        Assert.Empty(_multimedia.Llamadas);
+        Assert.Empty(_geoespacial.Llamadas);
+        Assert.Empty(_repositorio.Agregados);
+    }
+
+    [Fact]
+    public async Task Handle_VerificaElCaptchaAntesDeValidarElReporte()
+    {
+        _verificador.ExcepcionALanzar = new CaptchaInvalidoException("missing-input-response");
+
+        // Un reporte inválido y sin captcha: responde por el captcha, sin llegar a validar el reporte.
+        await Assert.ThrowsAsync<CaptchaInvalidoException>(
+            () => CrearHandler().Handle(ComandoValido() with { Descripcion = "" }, CancellationToken.None));
     }
 
     [Fact]
@@ -255,5 +297,17 @@ public class CrearReporteHandlerTests
         public Task ActualizarAsync(Reporte reporte, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task EliminarAsync(Reporte reporte, CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
+
+    private sealed class VerificadorFalso : IVerificadorCaptcha
+    {
+        public List<string?> Tokens { get; } = [];
+        public Exception? ExcepcionALanzar { get; set; }
+
+        public Task VerificarAsync(string? token, CancellationToken cancellationToken)
+        {
+            Tokens.Add(token);
+            return ExcepcionALanzar is null ? Task.CompletedTask : Task.FromException(ExcepcionALanzar);
+        }
     }
 }

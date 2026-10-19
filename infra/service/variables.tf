@@ -58,3 +58,23 @@ variable "geoespacial_assign_path" {
   type        = string
   default     = "api/v1/geoespacial/coordinates"
 }
+
+# Human verification of report creation (spec 003). Off until the portal sends the Turnstile token (feature 004 of
+# urban-alert-web) and the bootstrap secret urban-alert-reportes-captcha exists (infra/bootstrap/README.md, plan D-002).
+variable "captcha_habilitado" {
+  description = "Require and verify the Cloudflare Turnstile token on report creation."
+  type        = bool
+  default     = false
+}
+
+variable "captcha_hostnames" {
+  description = "Hostnames where the token may have been solved (the site's CloudFront domain). Empty: not checked."
+  type        = list(string)
+  default     = []
+}
+
+variable "captcha_accion" {
+  description = "Turnstile action the portal sets on the widget. Empty: not checked."
+  type        = string
+  default     = "crear-reporte"
+}

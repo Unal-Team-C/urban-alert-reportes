@@ -66,6 +66,9 @@ public class ReportesController : ControllerBase
         (códigos de GET /api/v1/Reportes/catalogo; el tipo debe
         pertenecer a la categoría), descripción, la ubicación
         (latitud y longitud dentro de Bogotá) y URL de la imagen.
+        Si la verificación humana está activa, también captchaToken (la prueba
+        de Cloudflare Turnstile del portal): sin ella o si no es válida
+        responde 400; si el proveedor no responde, 503.
 
         La ubicación se registra de forma síncrona en el servicio
         Geoespacial, que devuelve el identificador de coordenada que
@@ -94,7 +97,8 @@ public class ReportesController : ControllerBase
             request.Latitud,
             request.Longitud,
             request.UrlImagen,
-            IdUsuario: request.IdUsuario);
+            IdUsuario: request.IdUsuario,
+            CaptchaToken: request.CaptchaToken);
 
         Guid idReporte = await _crearReporteHandler.Handle(command, cancellationToken);
 
@@ -114,7 +118,8 @@ public class ReportesController : ControllerBase
         Igual que crear un reporte, pero la imagen se sube como archivo
         en lugar de enviar su URL. Se envía como multipart/form-data con
         los campos categoria, tipo, descripcion, latitud, longitud,
-        idUsuario (opcional) e imagen (JPEG o PNG de hasta 3,5 MB; el formato se valida
+        idUsuario (opcional), captchaToken (obligatorio si la verificación humana
+        está activa) e imagen (JPEG o PNG de hasta 3,5 MB; el formato se valida
         por el contenido del archivo).
 
         Reportes recibe el archivo junto con el reporte, lo sube de forma
@@ -144,7 +149,8 @@ public class ReportesController : ControllerBase
             request.Longitud,
             UrlImagen: null,
             new ImagenAdjunta(imagen, request.Imagen.Length, request.Imagen.FileName),
-            request.IdUsuario);
+            request.IdUsuario,
+            request.CaptchaToken);
 
         Guid idReporte = await _crearReporteHandler.Handle(command, cancellationToken);
 

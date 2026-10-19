@@ -210,3 +210,47 @@
 
 ## 2026-10-19 · 002-resiliencia-eventos · Verificación ✅
 - verify.md: build Release 0/0, UnitTests 108/108, IT 83/83 (3 corridas), base nueva + --migrar OK, sin cambios en infra/.github. Todos los RF/RNF con evidencia; HU-1.3/MS-002 por equivalencia (sin reinicio real). Corrección T013 añadida y hecha durante la verificación. Spec → implementada; fase done. CI/Provision pendientes del merge.
+
+## 2026-10-19 · 003-captcha-creacion · Creada spec desde descripción
+- Captcha (Cloudflare Turnstile) en la creación de reportes; diseño acordado con el usuario: token en el cuerpo (captchaToken), validado por Reportes; desactivado por defecto. Sin [NEEDS CLARIFICATION].
+
+## 2026-10-19 · 003-captcha-creacion · Spec aprobada
+- El usuario aprueba la spec (junto con la 004 del frontend).
+
+## 2026-10-19 · 003-captcha-creacion · plan.md y tasks.md generados
+- D-001 validar en Reportes; D-002 secreto de arranque urban-alert-reportes-captcha fuera del estado (excepción P2 justificada); D-003 reintento solo sin conexión y falla cerrado; D-004 verificar antes de todo. 6 tareas.
+
+## 2026-10-19 · 003-captcha-creacion · Plan y tareas aprobados
+- El usuario aprueba plan.md y tasks.md (junto con la otra feature del captcha); empieza la implementación.
+
+## 2026-10-19 · 003-captcha-creacion · T001 hecha
+- IVerificadorCaptcha (Application/Interfaces/Captcha), CaptchaInvalidoException (con Motivo) y CaptchaNoDisponibleException; CaptchaToken opcional en CrearReporteCommand; CrearReporteHandler verifica antes de validar el reporte y de toda llamada.
+- UT nuevas: token enviado al verificador; si falla (inválido o no disponible) no hay Multimedia, Geoespacial ni guardado; se verifica antes de validar el reporte. UnitTests 112/112. (La DI se completa en T002.)
+
+## 2026-10-19 · 003-captcha-creacion · T002 hecha
+- CaptchaOpciones (Captcha:*; no arranca si Habilitado sin ClaveSecreta), VerificadorDesactivado, VerificadorTurnstile (form-urlencoded secret/response; vacío o > 2048 sin red; success=false → inválido con error-codes; invalid-input-secret/missing-input-secret/internal-error, HTTP no 2xx, JSON ilegible, red, timeout y circuito → no disponible; hostname y acción si están configurados; logs sin token ni secreto), PoliticasHttp.AgregarResilienciaCaptcha (solo sin conexión), DI y appsettings Captcha + Resiliencia:Captcha.
+- 19 UT nuevas en VerificadorTurnstileTests (incl. circuito < 50 ms, 3 intentos solo sin conexión, 1 intento con 500). UnitTests 131/131.
+
+## 2026-10-19 · 003-captcha-creacion · T003 hecha
+- captchaToken opcional en CrearReporteRequest y CrearReporteConImagenRequest; el controlador lo pasa al comando; descripciones OpenAPI actualizadas. Middleware: CaptchaInvalidoException → 400 (mensaje genérico, el motivo solo en el log), CaptchaNoDisponibleException → 503.
+- IT CaptchaEndpointsTests (CaptchaApiFactory con Captcha:Habilitado=true y verificador controlable): JSON válido 201, sin token/falso 400 con mensaje, multipart válido 201, multipart sin token 400, proveedor caído 503. Las 83 anteriores (desactivado) sin cambios: IT 89/89.
+
+## 2026-10-19 · 003-captcha-creacion · T004 hecha
+- infra/service: variables captcha_habilitado (false), captcha_hostnames ([]), captcha_accion (crear-reporte); data aws_secretsmanager_secret.captcha (count, nombre urban-alert-reportes-captcha) solo si está activo; dynamic secret Captcha__ClaveSecreta = <arn>:clave_secreta::; Captcha__Habilitado/Accion/HostnamesPermitidos__N. tfvars con la verificación desactivada.
+- Permisos: el rol de los workflows ya tiene DescribeSecret/GetResourcePolicy sobre urban-alert-* (políticas de arranque de Geoespacial); el rol de ejecución ya lee urban-alert-reportes-*.
+- validate OK; terraform test 9/9 (2 nuevos); fmt limpio. Gotcha: TF_DATA_DIR temporal por un symlink en .terraform.
+
+## 2026-10-19 · 003-captcha-creacion · T005 hecha
+- infra/bootstrap/README.md §5: crear el widget en Cloudflare (dominios CloudFront + localhost), crear/rotar el secreto {clave_secreta} sin dejarlo en el historial, orden de activación (portal primero) y permisos existentes.
+- README: claves Captcha:* y Resiliencia:Captcha, comportamiento 400/503, claves de prueba de Cloudflare; coste (+0,4 USD con captcha, Turnstile 0). docs/funcionamiento.md: sección Verificación humana, flujo de creación y brecha de rutas de modificación. CLAUDE.md: gotchas.
+- Revisión cruzada: todas las claves Captcha:* y las variables captcha_* documentadas.
+
+## 2026-10-19 · 003-captcha-creacion · T006 hecha
+- Base nueva + --migrar (7) + IT 89/89; build Release 0/0; UnitTests Release 131/131; Terraform base 13/13, service 9/9, routes 7/7, fmt limpio; .github sin cambios; sin credenciales nuevas en el diff (solo claves de prueba públicas de Cloudflare).
+
+## 2026-10-19 · 003-captcha-creacion · T007 hecha (corrección de verificación)
+- E2E real: siteverify con el secreto de prueba responde hostname example.com y sin action; README corregido (en local, HostnamesPermitidos y Accion vacíos).
+- E2E con el portal (004 T005): Reportes en contenedor con Captcha activo y secreto de prueba; sin token 400, token de prueba 201; desde el navegador, POST 201 con siteverify (200, 74 ms) antes de Multimedia y Geoespacial.
+
+## 2026-10-19 · 003-captcha-creacion · Verificación ✅
+- verify.md con la matriz de requisitos; spec → implementada; fase done. Push, CI y activación pendientes del usuario.

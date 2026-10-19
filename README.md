@@ -64,9 +64,12 @@ Todo lo que cambia en la nube se elige por configuración; sin ella, el comporta
 | `Logging:Console:FormatterName` | texto | `json` (una línea por evento) |
 | `Apagado:TimeoutSegundos` | 30 (por defecto de .NET) | 20 |
 | `Outbox:*` | `Habilitado=true`, `IntervaloMs=1000`, `Lote=20`, `MaxIntentos=10`, `TimeoutPublicacionSegundos=10` | igual |
-| `Resiliencia:<Geoespacial\|Multimedia>:*` | `Reintentos=2`, `RetardoBaseMs=200`, `RatioFallos=0.5`, `VentanaSegundos=30`, `MinimoLlamadas=5`, `PausaSegundos=15`, `TimeoutTotalSegundos=12` | igual |
+| `Captcha:*` (spec 003) | `Habilitado=false` | `false` hasta activarlo (`captcha_habilitado`); activo: `ClaveSecreta` del secreto de arranque `urban-alert-reportes-captcha`, `Accion=crear-reporte`, `HostnamesPermitidos` = dominio de CloudFront |
+| `Resiliencia:<Geoespacial\|Multimedia\|Captcha>:*` | `Reintentos=2`, `RetardoBaseMs=200`, `RatioFallos=0.5`, `VentanaSegundos=30`, `MinimoLlamadas=5`, `PausaSegundos=15`, `TimeoutTotalSegundos=12` | igual |
 
 El evento de creación se guarda con el reporte en la tabla `MensajesOutbox` y lo entrega en segundo plano `DespachadorOutbox`: un fallo del bus no hace fallar la creación. Las llamadas a Geoespacial y Multimedia tienen reintentos y circuit breaker. Detalle en [docs/funcionamiento.md](docs/funcionamiento.md) («Entrega de eventos» y «Dependencias externas»).
+
+Con `Captcha:Habilitado=true`, la creación (JSON y multipart) exige `captchaToken`, la prueba de Cloudflare Turnstile del portal. Si falta o no es válida responde 400, y si Turnstile no responde, 503. Para activarla en AWS: [infra/bootstrap/README.md §5](infra/bootstrap/README.md). En local se pueden usar las claves de prueba de Cloudflare: el secreto `1x0000000000000000000000000000000AA` acepta cualquier token, como `XXXX.DUMMY.TOKEN.XXXX`, y `2x0000000000000000000000000000000AA` los rechaza todos. Esas claves devuelven `hostname: "example.com"` y ninguna `action`, así que en local hay que dejar vacíos `Captcha:HostnamesPermitidos` y `Captcha:Accion` (por ejemplo, `Captcha__Accion=`).
 
 Cada petición deja una línea de log con método, ruta, código y duración (`HttpLogging`), sin cabeceras ni cuerpos.
 
@@ -150,7 +153,8 @@ Estimación mensual en `us-east-2` con el servicio encendido y sin tráfico (730
 |---|---|
 | RDS `db.t4g.micro` Single-AZ + 20 GiB gp3 | ~14 USD |
 | Fargate, 1 tarea de 0,5 vCPU / 1 GiB (+ la tarea de migración, segundos por despliegue) | ~18 USD |
-| Secrets Manager (1 secreto propio; el de RDS lo gestiona RDS) | ~0,4 USD |
+| Secrets Manager (1 secreto propio; el de RDS lo gestiona RDS; +1 si se activa el captcha) | ~0,4 USD (~0,8 con captcha) |
+| Cloudflare Turnstile (verificación humana, opcional) | 0 |
 | ECR (≤ 20 imágenes), CloudWatch Logs (30 días) | < 1 USD |
 | EventBridge (1 USD por millón de eventos publicados) | ~0 |
 | **Total** | **~33 USD** |
