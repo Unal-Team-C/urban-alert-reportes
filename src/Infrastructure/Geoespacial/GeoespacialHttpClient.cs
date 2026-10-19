@@ -3,6 +3,8 @@ using System.Net.Http.Json;
 using Application.Geoespacial;
 using Application.Interfaces.Geoespacial;
 using Microsoft.Extensions.Logging;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 
 namespace Infrastructure.Geoespacial;
 
@@ -39,6 +41,15 @@ public class GeoespacialHttpClient(
         catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {
             throw new GeoespacialNoDisponibleException("El servicio Geoespacial no respondió a tiempo.", ex);
+        }
+        catch (TimeoutRejectedException ex)
+        {
+            throw new GeoespacialNoDisponibleException("El servicio Geoespacial no respondió a tiempo.", ex);
+        }
+        catch (BrokenCircuitException ex)
+        {
+            // Circuito abierto (spec 002 RF-009): falla de inmediato, sin llamar a Geoespacial.
+            throw new GeoespacialNoDisponibleException("El servicio Geoespacial no está disponible (circuito abierto).", ex);
         }
 
         using (respuesta)

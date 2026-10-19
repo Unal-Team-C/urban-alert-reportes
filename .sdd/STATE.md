@@ -7,12 +7,12 @@
 
 feature_activa: 002-resiliencia-eventos
 fase: implement
-tarea_actual: T009
+tarea_actual: T010
 estado_tarea: -
 
 ## Siguiente paso
 
-T009: en GeoespacialHttpClient y MultimediaHttpClient capturar BrokenCircuitException y TimeoutRejectedException → excepciones de no disponible (503).
+T010: tests/UnitTests/Infrastructure/PoliticasHttpTests.cs con la DI real (AddInfrastructure) y un handler primario falso: reintentos de Geoespacial, sin reintento 400/409, circuito abierto < 50 ms, half-open y cierre, firma por intento, Multimedia solo conexión, circuitos independientes.
 
 ## Contexto de trabajo
 

@@ -184,3 +184,7 @@
 - src/Infrastructure/Resiliencia/PoliticasHttp.cs: ResilienciaOpciones (Resiliencia:<dep>:*, valores de la spec, TimeoutTotalSegundos 12) y AgregarResiliencia{Geoespacial,Multimedia}: Retry (exponencial, jitter, 200 ms, ShouldRetryAfterHeader=false) → CircuitBreaker (50 %/30 s/mín. 5/15 s) → Timeout por intento. Multimedia: ShouldHandle del retry = solo HttpRequestError.ConnectionError/NameResolutionError.
 - DI: pipeline antes del AwsSignatureHandler (se firma en cada intento); HttpClient.Timeout = tope total. appsettings Resiliencia:*.
 - Build 0/0.
+
+## 2026-10-19 · 002-resiliencia-eventos · T009 hecha
+- GeoespacialHttpClient y MultimediaHttpClient: TimeoutRejectedException → 'no respondió a tiempo' y BrokenCircuitException → 'no disponible (circuito abierto)', ambas como excepciones de no disponible (503 por el middleware).
+- Build 0/0; UnitTests 96/96; IT 83/83. El comportamiento extremo a extremo lo prueba T010.

@@ -7,6 +7,8 @@ using Application.Imagenes;
 using Application.Interfaces.Multimedia;
 using Application.Multimedia;
 using Microsoft.Extensions.Logging;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 
 namespace Infrastructure.Multimedia;
 
@@ -146,6 +148,15 @@ public class MultimediaHttpClient(
         catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {
             throw new MultimediaNoDisponibleException("El servicio Multimedia no respondió a tiempo.", ex);
+        }
+        catch (TimeoutRejectedException ex)
+        {
+            throw new MultimediaNoDisponibleException("El servicio Multimedia no respondió a tiempo.", ex);
+        }
+        catch (BrokenCircuitException ex)
+        {
+            // Circuito abierto (spec 002 RF-009): falla de inmediato, sin llamar a Multimedia.
+            throw new MultimediaNoDisponibleException("El servicio Multimedia no está disponible (circuito abierto).", ex);
         }
     }
 
