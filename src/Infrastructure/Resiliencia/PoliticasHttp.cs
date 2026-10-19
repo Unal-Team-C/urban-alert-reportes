@@ -6,7 +6,7 @@ using Polly;
 
 namespace Infrastructure.Resiliencia;
 
-// Sección "Resiliencia:<Geoespacial|Multimedia>" (spec 002 RF-007 a RF-012). Los valores por defecto son los de la spec.
+// Sección "Resiliencia:<Geoespacial|Multimedia|Captcha>" (spec 002 RF-007 a RF-012). Los valores por defecto son los de la spec.
 public sealed record ResilienciaOpciones(
     int Reintentos = 2,
     int RetardoBaseMs = 200,
@@ -44,6 +44,7 @@ public static class PoliticasHttp
 {
     public const string Geoespacial = "geoespacial";
     public const string Multimedia = "multimedia";
+    public const string Captcha = "captcha";
 
     // Geoespacial es idempotente por reporte (200 ante una repetición idéntica): se reintentan todos los
     // fallos transitorios (sin conexión, timeout, 408, 429, 5xx). 400/404/409 no se reintentan (RF-008).
@@ -56,6 +57,12 @@ public static class PoliticasHttp
     public static IHttpClientBuilder AgregarResilienciaMultimedia(
         this IHttpClientBuilder cliente, ResilienciaOpciones opciones, TimeSpan timeoutPorIntento) =>
         cliente.AgregarPipeline(Multimedia, opciones, timeoutPorIntento, soloSinConexion: true);
+
+    // La prueba del captcha es de un solo uso: como Multimedia, solo se reintenta si la conexión no se estableció
+    // (spec 003 RF-006, plan D-003).
+    public static IHttpClientBuilder AgregarResilienciaCaptcha(
+        this IHttpClientBuilder cliente, ResilienciaOpciones opciones, TimeSpan timeoutPorIntento) =>
+        cliente.AgregarPipeline(Captcha, opciones, timeoutPorIntento, soloSinConexion: true);
 
     public static bool EsFalloDeConexion(Exception? excepcion) =>
         excepcion is HttpRequestException { HttpRequestError: HttpRequestError.ConnectionError or HttpRequestError.NameResolutionError };

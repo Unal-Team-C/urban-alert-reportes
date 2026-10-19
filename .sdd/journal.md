@@ -226,3 +226,7 @@
 ## 2026-10-19 · 003-captcha-creacion · T001 hecha
 - IVerificadorCaptcha (Application/Interfaces/Captcha), CaptchaInvalidoException (con Motivo) y CaptchaNoDisponibleException; CaptchaToken opcional en CrearReporteCommand; CrearReporteHandler verifica antes de validar el reporte y de toda llamada.
 - UT nuevas: token enviado al verificador; si falla (inválido o no disponible) no hay Multimedia, Geoespacial ni guardado; se verifica antes de validar el reporte. UnitTests 112/112. (La DI se completa en T002.)
+
+## 2026-10-19 · 003-captcha-creacion · T002 hecha
+- CaptchaOpciones (Captcha:*; no arranca si Habilitado sin ClaveSecreta), VerificadorDesactivado, VerificadorTurnstile (form-urlencoded secret/response; vacío o > 2048 sin red; success=false → inválido con error-codes; invalid-input-secret/missing-input-secret/internal-error, HTTP no 2xx, JSON ilegible, red, timeout y circuito → no disponible; hostname y acción si están configurados; logs sin token ni secreto), PoliticasHttp.AgregarResilienciaCaptcha (solo sin conexión), DI y appsettings Captcha + Resiliencia:Captcha.
+- 19 UT nuevas en VerificadorTurnstileTests (incl. circuito < 50 ms, 3 intentos solo sin conexión, 1 intento con 500). UnitTests 131/131.

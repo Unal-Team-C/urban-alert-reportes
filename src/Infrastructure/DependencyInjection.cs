@@ -5,10 +5,12 @@ using Amazon.Runtime;
 using AwsSignatureVersion4;
 using Infrastructure.Aws;
 using Application.Comun;
+using Application.Interfaces.Captcha;
 using Application.Interfaces.Eventos;
 using Application.Interfaces.Geoespacial;
 using Application.Interfaces.Multimedia;
 using Application.Interfaces.Reportes;
+using Infrastructure.Captcha;
 using Infrastructure.Geoespacial;
 using Infrastructure.Mensajeria;
 using Infrastructure.Mensajeria.Outbox;
@@ -40,6 +42,7 @@ public static class DependencyInjection
         AgregarMultimedia(services, configuration);
         AgregarMensajeria(services, configuration);
         AgregarOutbox(services, configuration);
+        AgregarCaptcha(services, configuration);
 
         return services;
     }
@@ -98,6 +101,24 @@ public static class DependencyInjection
                 client.Timeout = TimeSpan.FromSeconds(resiliencia.TimeoutTotalSegundos);
             })
             .AgregarResilienciaMultimedia(resiliencia, TimeSpan.FromSeconds(timeoutSegundos));
+    }
+
+    // Verificación humana de la creación (spec 003): Turnstile si está activa; si no, no hace nada.
+    private static void AgregarCaptcha(IServiceCollection services, IConfiguration configuration)
+    {
+        CaptchaOpciones opciones = CaptchaOpciones.Desde(configuration);
+        services.AddSingleton(opciones);
+
+        if (!opciones.Habilitado)
+        {
+            services.AddSingleton<IVerificadorCaptcha, VerificadorDesactivado>();
+            return;
+        }
+
+        ResilienciaOpciones resiliencia = ResilienciaOpciones.Desde(configuration, "Captcha");
+        services.AddHttpClient<IVerificadorCaptcha, VerificadorTurnstile>(client =>
+                client.Timeout = TimeSpan.FromSeconds(resiliencia.TimeoutTotalSegundos))
+            .AgregarResilienciaCaptcha(resiliencia, TimeSpan.FromSeconds(opciones.TimeoutSegundos));
     }
 
     // Despachador del outbox (spec 002): entrega en segundo plano los eventos guardados con cada reporte.
