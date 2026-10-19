@@ -11,6 +11,7 @@ using Application.Interfaces.Multimedia;
 using Application.Interfaces.Reportes;
 using Infrastructure.Geoespacial;
 using Infrastructure.Mensajeria;
+using Infrastructure.Mensajeria.Outbox;
 using Infrastructure.Multimedia;
 using Infrastructure.Persistencia;
 using Infrastructure.Persistencia.Repositorios;
@@ -37,6 +38,7 @@ public static class DependencyInjection
         AgregarGeoespacial(services, configuration);
         AgregarMultimedia(services, configuration);
         AgregarMensajeria(services, configuration);
+        AgregarOutbox(services, configuration);
 
         return services;
     }
@@ -90,6 +92,16 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
             client.Timeout = TimeSpan.FromSeconds(timeoutSegundos);
         });
+    }
+
+    // Despachador del outbox (spec 002): entrega en segundo plano los eventos guardados con cada reporte.
+    private static void AgregarOutbox(IServiceCollection services, IConfiguration configuration)
+    {
+        OutboxOpciones opciones = OutboxOpciones.Desde(configuration);
+        services.AddSingleton(opciones);
+        services.AddSingleton<DespachadorOutbox>();
+        if (opciones.Habilitado)
+            services.AddHostedService(sp => sp.GetRequiredService<DespachadorOutbox>());
     }
 
     // RabbitMq (local, por defecto) o EventBridge (AWS). Con EventBridge no se registra MassTransit.

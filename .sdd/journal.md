@@ -168,3 +168,8 @@
 - IReporteRepository.AgregarAsync(reporte, IEventoDominio, ct): Add reporte + MensajeOutbox.Crear(evento, TimeProvider) y un SaveChanges. TimeProvider.System registrado con TryAdd. CrearReporteHandler ya no depende de IEventPublisher.
 - Unitarias: RepositorioFalso guarda eventos; prueba nueva de fallo del guardado sin reporte ni evento. 96/96.
 - IT nuevas (OutboxGuardadoTests): POST deja la fila ReporteCreadoEvent del reporte; Id duplicado → DbUpdateException y ninguna fila del segundo evento. IT 79/79 en local (Podman).
+
+## 2026-10-19 · 002-resiliencia-eventos · T006 hecha
+- DespachadorOutbox (BackgroundService): vuelta cada IntervaloMs con Task.Delay(TimeProvider); lote FromSql parametrizado ... FOR UPDATE SKIP LOCKED en transacción; publica por IEventPublisher del scope con tope TimeoutPublicacionSegundos; MarcarEntregado / RegistrarFallo (Warning; Error al quedar FALLIDO, RF-013); sigue sin esperar si el lote viene lleno.
+- OutboxOpciones.Desde(config) con validación; DespachadorOutbox singleton + AddHostedService si Habilitado; appsettings Outbox:*.
+- Build 0/0; IT 79/79 con el despachador activo: 25 eventos ENTREGADO contra RabbitMQ real en la corrida.

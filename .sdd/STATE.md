@@ -7,12 +7,12 @@
 
 feature_activa: 002-resiliencia-eventos
 fase: implement
-tarea_actual: T006
+tarea_actual: T007
 estado_tarea: -
 
 ## Siguiente paso
 
-T006: DespachadorOutbox (BackgroundService) + OutboxOpciones; lote FOR UPDATE SKIP LOCKED en transacción; publica por IEventPublisher en un scope; backoff/FALLIDO; registro en DI y appsettings Outbox:*.
+T007: tests/IntegrationTests/Mensajeria/DespachadorOutboxTests.cs en una colección sin paralelismo: entrega < 5 s con el host real; con publicador controlable (Outbox:Habilitado=false y ProcesarLoteAsync a mano): 201 con bus caído, reintento y entrega, FALLIDO tras MaxIntentos sin bloquear, dos despachadores concurrentes sin duplicar.
 
 ## Contexto de trabajo
 
