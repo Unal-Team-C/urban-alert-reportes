@@ -26,6 +26,8 @@ Herramientas: `$DOTNET` e `$IT` como en la 002; `$TF` = `podman run --rm -v "$PW
 
 <!-- /sdd-verify añade aquí tareas si detecta fallos -->
 
+- [x] T007 Corregir la configuración local documentada: las claves de prueba de Cloudflare devuelven `hostname: example.com` y ninguna `action` (comprobado con `siteverify` real), así que en local hay que dejar vacíos `HostnamesPermitidos` **y** `Accion` — archivos: README.md — cubre: RF-004, RF-008 — verifica: el README lo indica; E2E local con `Captcha__Accion=` → 201
+
 ## Cobertura
 
 | Requisito | Tareas |

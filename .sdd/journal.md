@@ -247,3 +247,7 @@
 
 ## 2026-10-19 · 003-captcha-creacion · T006 hecha
 - Base nueva + --migrar (7) + IT 89/89; build Release 0/0; UnitTests Release 131/131; Terraform base 13/13, service 9/9, routes 7/7, fmt limpio; .github sin cambios; sin credenciales nuevas en el diff (solo claves de prueba públicas de Cloudflare).
+
+## 2026-10-19 · 003-captcha-creacion · T007 hecha (corrección de verificación)
+- E2E real: siteverify con el secreto de prueba responde hostname example.com y sin action; README corregido (en local, HostnamesPermitidos y Accion vacíos).
+- E2E con el portal (004 T005): Reportes en contenedor con Captcha activo y secreto de prueba; sin token 400, token de prueba 201; desde el navegador, POST 201 con siteverify (200, 74 ms) antes de Multimedia y Geoespacial.
