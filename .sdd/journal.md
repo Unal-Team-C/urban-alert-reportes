@@ -222,3 +222,7 @@
 
 ## 2026-10-19 · 003-captcha-creacion · Plan y tareas aprobados
 - El usuario aprueba plan.md y tasks.md (junto con la otra feature del captcha); empieza la implementación.
+
+## 2026-10-19 · 003-captcha-creacion · T001 hecha
+- IVerificadorCaptcha (Application/Interfaces/Captcha), CaptchaInvalidoException (con Motivo) y CaptchaNoDisponibleException; CaptchaToken opcional en CrearReporteCommand; CrearReporteHandler verifica antes de validar el reporte y de toda llamada.
+- UT nuevas: token enviado al verificador; si falla (inválido o no disponible) no hay Multimedia, Geoespacial ni guardado; se verifica antes de validar el reporte. UnitTests 112/112. (La DI se completa en T002.)

@@ -1,4 +1,5 @@
 using Application.Imagenes;
+using Application.Interfaces.Captcha;
 using Application.Interfaces.CrearReporte;
 using Application.Interfaces.Geoespacial;
 using Application.Interfaces.Multimedia;
@@ -13,19 +14,26 @@ public class CrearReporteHandler : ICrearReporteHandler
     private readonly IReporteRepository _reporteRepository;
     private readonly IGeoespacialClient _geoespacialClient;
     private readonly IMultimediaClient _multimediaClient;
+    private readonly IVerificadorCaptcha _verificadorCaptcha;
 
     public CrearReporteHandler(
         IReporteRepository reporteRepository,
         IGeoespacialClient geoespacialClient,
-        IMultimediaClient multimediaClient)
+        IMultimediaClient multimediaClient,
+        IVerificadorCaptcha verificadorCaptcha)
     {
         _reporteRepository = reporteRepository;
         _geoespacialClient = geoespacialClient;
         _multimediaClient = multimediaClient;
+        _verificadorCaptcha = verificadorCaptcha;
     }
 
     public async Task<Guid> Handle(CrearReporteCommand command, CancellationToken cancellationToken)
     {
+        // Antes que nada (spec 003 RF-002): una petición sin prueba humana válida no provoca subidas a
+        // Multimedia, registros en Geoespacial ni guardados.
+        await _verificadorCaptcha.VerificarAsync(command.CaptchaToken, cancellationToken);
+
         // Sin autenticación todavía: el usuario lo envía el cliente. Si no llega, se asigna uno
         // genérico hasta que exista un proveedor de identidad del cual tomar el usuario actual.
         Guid idUsuario = command.IdUsuario ?? Guid.NewGuid();

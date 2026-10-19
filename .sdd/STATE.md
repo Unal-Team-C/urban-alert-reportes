@@ -7,12 +7,12 @@
 
 feature_activa: 003-captcha-creacion
 fase: implement
-tarea_actual: -
+tarea_actual: T002
 estado_tarea: -
 
 ## Siguiente paso
 
-Redactar specs/003-captcha-creacion/spec.md: validar en el servidor el token de Cloudflare Turnstile en POST /api/v1/reportes (JSON y multipart), desactivado por defecto; pareja de la feature 004-captcha-reporte del frontend. Rama 003-captcha-creacion sobre 002-resiliencia-eventos (PR #7 sin merge).
+T002: VerificadorTurnstile, VerificadorDesactivado, CaptchaOpciones, AgregarResilienciaCaptcha, DI y appsettings; pruebas del verificador.
 
 ## Contexto de trabajo
 

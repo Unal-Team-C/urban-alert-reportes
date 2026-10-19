@@ -6,6 +6,7 @@ namespace Application.Reportes.CrearReporte;
 // desde el dispositivo (multipart). Se exige al menos una.
 // IdUsuario: quién crea el reporte. Mientras no exista autenticación lo envía el cliente;
 // si no llega, se asigna un usuario genérico.
+// CaptchaToken: prueba de verificación humana del portal (spec 003); solo se exige si la verificación está activa.
 public record CrearReporteCommand(
     CategoriaReporte Categoria,
     TipoReporte Tipo,
@@ -14,7 +15,8 @@ public record CrearReporteCommand(
     double Longitud,
     string? UrlImagen,
     ImagenAdjunta? Imagen = null,
-    Guid? IdUsuario = null
+    Guid? IdUsuario = null,
+    string? CaptchaToken = null
 );
 
 // El stream debe permitir volver al inicio (Seek): primero se lee su cabecera para validarlo.
