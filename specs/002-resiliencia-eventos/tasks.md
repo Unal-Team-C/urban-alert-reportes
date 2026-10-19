@@ -41,7 +41,7 @@ Dependencias: cada fase depende de la anterior; dentro de una fase se ejecuta en
 ## Fase 4: Pulido
 
 - [x] T011 Documentar: quitar la brecha del outbox de docs/funcionamiento.md; describir el outbox, el despachador, las políticas y las claves `Outbox:*`/`Resiliencia:*` en README y docs; anotar la compensación (saga) como brecha restante — archivos: README.md, docs/funcionamiento.md, CLAUDE.md — cubre: RNF-006, spec §8 — verifica: la documentación coincide con appsettings.json y con el código (revisión cruzada de claves)
-- [ ] T012 Comprobación completa antes de verificar: base nueva + `--migrar` + IT, unitarias, `git diff --stat origin/main` sin cambios en `infra/` ni en `.github/` — archivos: — — cubre: RNF-006, P6 — verifica: todas en verde; diff sin Terraform
+- [x] T012 Comprobación completa antes de verificar: base nueva + `--migrar` + IT, unitarias, `git diff --stat origin/main` sin cambios en `infra/` ni en `.github/` — archivos: — — cubre: RNF-006, P6 — verifica: todas en verde; diff sin Terraform
 
 ## Correcciones de verificación
 

@@ -7,12 +7,12 @@
 
 feature_activa: 002-resiliencia-eventos
 fase: implement
-tarea_actual: T012
-estado_tarea: -
+tarea_actual: -
+estado_tarea: hecha
 
 ## Siguiente paso
 
-T012: comprobación completa: base nueva + --migrar + IT, unitarias, git diff origin/main sin infra/ ni .github/.
+Ejecutar /sdd-verify de 002-resiliencia-eventos → verify.md.
 
 ## Contexto de trabajo
 

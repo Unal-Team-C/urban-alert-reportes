@@ -199,3 +199,8 @@
 - docs/funcionamiento.md: flujo de creación con guardado atómico; sección «Entrega de eventos (outbox)» (despachador, estados, backoff, SKIP LOCKED, al menos una vez, consultas SQL); resiliencia de Geoespacial/Multimedia; brecha del outbox sustituida por saga y FALLIDO sin reproceso/alarmas.
 - README: claves Outbox:* y Resiliencia:* en la tabla de configuración; EventBridge rechazado → reintento del outbox; specs 001 y 002. CLAUDE.md: gotchas de outbox, Polly MaxRetryAttempts y colección sin paralelismo.
 - Revisión cruzada: todas las claves de appsettings Outbox/Resiliencia aparecen en docs y en el código.
+
+## 2026-10-19 · 002-resiliencia-eventos · T012 hecha
+- Base nueva + --migrar (7 migraciones) + IT 83/83; build Release 0/0; UnitTests Release 107/107.
+- git diff origin/main: 0 líneas en infra/ y .github/ (RNF-006, sin Terraform); 40 archivos. Sin credenciales nuevas (solo AKIDEXAMPLE y valores de relleno ya usados en las pruebas).
+- Pendiente fuera de local: job test de CI y despliegue (Provision) al hacer merge.
