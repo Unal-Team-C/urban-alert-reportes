@@ -47,6 +47,8 @@ Dependencias: cada fase depende de la anterior; dentro de una fase se ejecuta en
 
 <!-- /sdd-verify añade aquí tareas si detecta fallos -->
 
+- [x] T013 Comprobar que los reintentos y la apertura del circuito quedan en el log (RF-013 en dependencias; hoy solo se supone por la telemetría de Polly) — archivos: tests/UnitTests/Infrastructure/PoliticasHttpTests.cs — cubre: RF-013 — verifica: `$DOTNET test tests/UnitTests` con aserciones sobre los eventos OnRetry y OnCircuitOpened en el log
+
 ## Cobertura
 
 | Requisito | Tareas |
@@ -63,7 +65,7 @@ Dependencias: cada fase depende de la anterior; dentro de una fase se ejecuta en
 | RF-010 | T008, T010 |
 | RF-011 | T008, T010 |
 | RF-012 | T008, T010 |
-| RF-013 | T006, T010 |
+| RF-013 | T006, T010, T013 |
 | RNF-001 | T006, T007 |
 | RNF-002 | T010 |
 | RNF-003 | T008 |

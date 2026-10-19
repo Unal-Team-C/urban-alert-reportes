@@ -9,6 +9,7 @@ using Application.Multimedia;
 using Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace UnitTests.Infrastructure;
 
@@ -19,6 +20,7 @@ public class PoliticasHttpTests
 
     private readonly ServidorFalso _servidor = new();
     private readonly RelojFalso _reloj = new();
+    private readonly LogsCapturados _logs = new();
 
     private ServiceProvider Proveedor(Dictionary<string, string?>? extra = null)
     {
@@ -38,7 +40,7 @@ public class PoliticasHttpTests
             valores[clave] = valor;
 
         ServiceCollection servicios = new();
-        servicios.AddLogging();
+        servicios.AddLogging(logs => logs.AddProvider(_logs));
         servicios.AddSingleton<TimeProvider>(_reloj);
         servicios.AddSingleton<AWSCredentials>(new BasicAWSCredentials("AKIDEXAMPLE", "secreto"));
         servicios.AddInfrastructure(new ConfigurationBuilder().AddInMemoryCollection(valores).Build());
@@ -189,6 +191,20 @@ public class PoliticasHttpTests
         Assert.Equal("https://multimedia.urbanalert.com/imagen.png", await SubirAsync(proveedor));
     }
 
+    [Fact]
+    public async Task LosReintentosYLaAperturaDelCircuitoQuedanEnElLog()
+    {
+        _servidor.Responder(Estado(HttpStatusCode.ServiceUnavailable));
+        using ServiceProvider proveedor = Proveedor();
+
+        // 2 creaciones × 3 intentos = 6 fallos: el circuito se abre (mínimo 5 llamadas).
+        for (int i = 0; i < 2; i++)
+            await Assert.ThrowsAsync<GeoespacialNoDisponibleException>(() => AsignarAsync(proveedor));
+
+        Assert.Contains(_logs.Mensajes, m => m.Contains("OnRetry"));
+        Assert.Contains(_logs.Mensajes, m => m.Contains("OnCircuitOpened"));
+    }
+
     private ServiceProvider ProveedorSinReintentos() => Proveedor(new() { ["Resiliencia:Geoespacial:Reintentos"] = "0" });
 
     private static Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> Estado(HttpStatusCode estado) =>
@@ -229,6 +245,29 @@ public class PoliticasHttpTests
             lock (Cabeceras)
                 Cabeceras.Add(request.Headers.ToDictionary(h => h.Key, h => string.Join(",", h.Value), StringComparer.OrdinalIgnoreCase));
             return _respuestas[Math.Min(indice, _respuestas.Count - 1)](request, cancellationToken);
+        }
+    }
+
+    private sealed class LogsCapturados : ILoggerProvider
+    {
+        private readonly System.Collections.Concurrent.ConcurrentQueue<string> _mensajes = new();
+
+        public IReadOnlyList<string> Mensajes => _mensajes.ToArray();
+
+        public ILogger CreateLogger(string categoryName) => new Registrador(_mensajes);
+
+        public void Dispose()
+        {
+        }
+
+        private sealed class Registrador(System.Collections.Concurrent.ConcurrentQueue<string> mensajes) : ILogger
+        {
+            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+                mensajes.Enqueue(formatter(state, exception));
         }
     }
 

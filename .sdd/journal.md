@@ -204,3 +204,6 @@
 - Base nueva + --migrar (7 migraciones) + IT 83/83; build Release 0/0; UnitTests Release 107/107.
 - git diff origin/main: 0 líneas en infra/ y .github/ (RNF-006, sin Terraform); 40 archivos. Sin credenciales nuevas (solo AKIDEXAMPLE y valores de relleno ya usados en las pruebas).
 - Pendiente fuera de local: job test de CI y despliegue (Provision) al hacer merge.
+
+## 2026-10-19 · 002-resiliencia-eventos · T013 hecha
+- PoliticasHttpTests.LosReintentosYLaAperturaDelCircuitoQuedanEnElLog: con un ILoggerProvider de captura, la telemetría de Microsoft.Extensions.Resilience registra OnRetry y OnCircuitOpened. UnitTests 108/108.

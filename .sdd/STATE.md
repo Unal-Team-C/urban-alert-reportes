@@ -12,7 +12,7 @@ estado_tarea: hecha
 
 ## Siguiente paso
 
-Ejecutar /sdd-verify de 002-resiliencia-eventos → verify.md.
+Escribir specs/002-resiliencia-eventos/verify.md y cerrar la feature.
 
 ## Contexto de trabajo
 
