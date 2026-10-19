@@ -210,3 +210,15 @@
 
 ## 2026-10-19 · 002-resiliencia-eventos · Verificación ✅
 - verify.md: build Release 0/0, UnitTests 108/108, IT 83/83 (3 corridas), base nueva + --migrar OK, sin cambios en infra/.github. Todos los RF/RNF con evidencia; HU-1.3/MS-002 por equivalencia (sin reinicio real). Corrección T013 añadida y hecha durante la verificación. Spec → implementada; fase done. CI/Provision pendientes del merge.
+
+## 2026-10-19 · 003-captcha-creacion · Creada spec desde descripción
+- Captcha (Cloudflare Turnstile) en la creación de reportes; diseño acordado con el usuario: token en el cuerpo (captchaToken), validado por Reportes; desactivado por defecto. Sin [NEEDS CLARIFICATION].
+
+## 2026-10-19 · 003-captcha-creacion · Spec aprobada
+- El usuario aprueba la spec (junto con la 004 del frontend).
+
+## 2026-10-19 · 003-captcha-creacion · plan.md y tasks.md generados
+- D-001 validar en Reportes; D-002 secreto de arranque urban-alert-reportes-captcha fuera del estado (excepción P2 justificada); D-003 reintento solo sin conexión y falla cerrado; D-004 verificar antes de todo. 6 tareas.
+
+## 2026-10-19 · 003-captcha-creacion · Plan y tareas aprobados
+- El usuario aprueba plan.md y tasks.md (junto con la otra feature del captcha); empieza la implementación.
