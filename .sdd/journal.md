@@ -146,3 +146,6 @@
 
 ## 2026-10-19 · 002-resiliencia-eventos · Plan y tareas aprobados
 - El usuario aprueba plan.md y tasks.md; empieza la implementación por T001.
+
+## 2026-10-19 · 002-resiliencia-eventos · T001 hecha
+- Microsoft.Extensions.Http.Resilience 10.10.0 sin conflicto con Microsoft.Extensions.Http 10.0.12 (no hizo falta subirlo). Build 0 errores/0 advertencias; UnitTests 86/86.

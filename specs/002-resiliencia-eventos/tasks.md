@@ -16,7 +16,7 @@ Dependencias: cada fase depende de la anterior; dentro de una fase se ejecuta en
 
 ## Fase 1: Preparación
 
-- [ ] T001 Añadir `Microsoft.Extensions.Http.Resilience` 10.10.0 (si NuGet exige subir `Microsoft.Extensions.Http`, subirlo a la versión mínima exacta y anotarlo en el plan) — archivos: src/Infrastructure/Infrastructure.csproj — cubre: D-004, P8 — verifica: `$DOTNET build UrbanAlert.Reportes.slnx` en verde y las pruebas unitarias actuales siguen pasando
+- [x] T001 Añadir `Microsoft.Extensions.Http.Resilience` 10.10.0 (si NuGet exige subir `Microsoft.Extensions.Http`, subirlo a la versión mínima exacta y anotarlo en el plan) — archivos: src/Infrastructure/Infrastructure.csproj — cubre: D-004, P8 — verifica: `$DOTNET build UrbanAlert.Reportes.slnx` en verde y las pruebas unitarias actuales siguen pasando
 
 ## Fase 2: Núcleo: outbox
 

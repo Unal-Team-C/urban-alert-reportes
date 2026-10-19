@@ -7,12 +7,12 @@
 
 feature_activa: 002-resiliencia-eventos
 fase: implement
-tarea_actual: T001
+tarea_actual: T002
 estado_tarea: -
 
 ## Siguiente paso
 
-Aprobar plan.md y tasks.md de 002-resiliencia-eventos (12 tareas: outbox propio + Microsoft.Extensions.Http.Resilience 10.10.0) → /sdd-implement T001.
+T002: IEventPublisher no genérico (object); EventBridge con GetType() y timeout 5 s; MassTransit Publish(evento, tipo); ajustar pruebas y añadir no regresión de DetailType/Detail.
 
 ## Contexto de trabajo
 
