@@ -6,13 +6,13 @@
      estado_tarea: - -->
 
 feature_activa: 003-captcha-creacion
-fase: implement
+fase: done
 tarea_actual: -
-estado_tarea: hecha
+estado_tarea: -
 
 ## Siguiente paso
 
-Escribir verify.md de 003 y cerrar; después implementar 004 en urban-alert-web.
+003-captcha-creacion cerrada en local (verify.md ✅). Pendiente del usuario: push y PR; activación con las claves reales de Cloudflare en el orden documentado (portal primero).
 
 ## Contexto de trabajo
 

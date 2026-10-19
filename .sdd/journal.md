@@ -251,3 +251,6 @@
 ## 2026-10-19 · 003-captcha-creacion · T007 hecha (corrección de verificación)
 - E2E real: siteverify con el secreto de prueba responde hostname example.com y sin action; README corregido (en local, HostnamesPermitidos y Accion vacíos).
 - E2E con el portal (004 T005): Reportes en contenedor con Captcha activo y secreto de prueba; sin token 400, token de prueba 201; desde el navegador, POST 201 con siteverify (200, 74 ms) antes de Multimedia y Geoespacial.
+
+## 2026-10-19 · 003-captcha-creacion · Verificación ✅
+- verify.md con la matriz de requisitos; spec → implementada; fase done. Push, CI y activación pendientes del usuario.
