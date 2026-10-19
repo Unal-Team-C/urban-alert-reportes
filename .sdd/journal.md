@@ -173,3 +173,9 @@
 - DespachadorOutbox (BackgroundService): vuelta cada IntervaloMs con Task.Delay(TimeProvider); lote FromSql parametrizado ... FOR UPDATE SKIP LOCKED en transacción; publica por IEventPublisher del scope con tope TimeoutPublicacionSegundos; MarcarEntregado / RegistrarFallo (Warning; Error al quedar FALLIDO, RF-013); sigue sin esperar si el lote viene lleno.
 - OutboxOpciones.Desde(config) con validación; DespachadorOutbox singleton + AddHostedService si Habilitado; appsettings Outbox:*.
 - Build 0/0; IT 79/79 con el despachador activo: 25 eventos ENTREGADO contra RabbitMQ real en la corrida.
+
+## 2026-10-19 · 002-resiliencia-eventos · T007 hecha
+- tests/IntegrationTests/Mensajeria: OutboxApiFactory (Outbox:Habilitado=false, MaxIntentos=3, PublicadorControlable, RelojControlable, LogsCapturados) y colección Outbox sin paralelismo.
+- DespachadorOutboxTests: bus caído → 201, PENDIENTE con Intentos=1 y UltimoError, sin reintento antes del backoff, ENTREGADO al recuperarse (publicado 1 vez); FALLIDO tras 3 intentos sin bloquear al sano y log Error (RF-013); 2 despachadores concurrentes con 30 eventos → cada uno publicado exactamente una vez (SKIP LOCKED).
+- DespachadorEnSegundoPlanoTests: host real + RabbitMQ, entregado en < 5 s (RNF-001).
+- IT 83/83 tres corridas seguidas.

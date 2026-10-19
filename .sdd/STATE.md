@@ -7,12 +7,12 @@
 
 feature_activa: 002-resiliencia-eventos
 fase: implement
-tarea_actual: T007
+tarea_actual: T008
 estado_tarea: -
 
 ## Siguiente paso
 
-T007: tests/IntegrationTests/Mensajeria/DespachadorOutboxTests.cs en una colección sin paralelismo: entrega < 5 s con el host real; con publicador controlable (Outbox:Habilitado=false y ProcesarLoteAsync a mano): 201 con bus caído, reintento y entrega, FALLIDO tras MaxIntentos sin bloquear, dos despachadores concurrentes sin duplicar.
+T008: PoliticasHttp con pipelines de Geoespacial (Retry ×2 exponencial con jitter → CircuitBreaker → Timeout por intento) y Multimedia (retry solo ConnectionError/NameResolutionError), opciones Resiliencia:*, conectados en DI antes del AwsSignatureHandler; HttpClient.Timeout = 12 s.
 
 ## Contexto de trabajo
 
