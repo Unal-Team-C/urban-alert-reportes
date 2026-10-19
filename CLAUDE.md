@@ -24,6 +24,9 @@ AWS (spec `specs/001-migracion-aws/`): cuenta 348364742283, us-east-2. Terraform
 - `AwsSignatureHandler` quita `Authorization`/`X-Amz-*` de la petición al terminar el envío: en pruebas, copiar cabeceras en el momento.
 - Npgsql intenta cifrado GSS (Kerberos) si no se desactiva: `GSS Encryption Mode=Disable` en las cadenas de la nube (la imagen no trae libgssapi).
 - macOS trae bash 3.2: los scripts no usan funciones de bash 4.
+- Outbox (spec 002): el evento de creación se guarda con el reporte (`IReporteRepository.AgregarAsync(reporte, evento)`) y lo publica `DespachadorOutbox`; los handlers no llaman a `IEventPublisher`. Un evento nuevo debe implementar `IEventoDominio` y registrarse en `SerializacionEventos`.
+- Polly exige `MaxRetryAttempts ≥ 1`: `Resiliencia:*:Reintentos=0` omite la estrategia en vez de pasarle 0.
+- Las pruebas del despachador (`tests/IntegrationTests/Mensajeria`) van en una colección sin paralelismo: otro host de prueba con despachador activo entregaría sus filas.
 
 ## Desarrollo guiado por especificaciones (SDD)
 

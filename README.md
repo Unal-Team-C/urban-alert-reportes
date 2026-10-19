@@ -19,7 +19,7 @@ infra/              Terraform de AWS: base, service, routes; inventario y recurs
 scripts/            Scripts de los workflows (comprobaciones, migración, listener, humo) y sus pruebas.
 .github/workflows/  Provision (push a main) y Deprovision (manual).
 docs/               Notas de implementación y brechas conocidas (docs/funcionamiento.md).
-specs/              Especificación, plan y tareas de la migración a AWS (SDD).
+specs/              Especificación, plan y tareas (SDD): 001 migración a AWS, 002 outbox y resiliencia.
 ```
 
 ## Ejecutar en local
@@ -63,6 +63,10 @@ Todo lo que cambia en la nube se elige por configuración; sin ella, el comporta
 | `Multimedia:BaseUrl` / `Modo` | `http://localhost:9010` / `Emulador` (sobre del emulador de Lambda) | URL del gateway / `Gateway` (multipart normal) |
 | `Logging:Console:FormatterName` | texto | `json` (una línea por evento) |
 | `Apagado:TimeoutSegundos` | 30 (por defecto de .NET) | 20 |
+| `Outbox:*` | `Habilitado=true`, `IntervaloMs=1000`, `Lote=20`, `MaxIntentos=10`, `TimeoutPublicacionSegundos=10` | igual |
+| `Resiliencia:<Geoespacial\|Multimedia>:*` | `Reintentos=2`, `RetardoBaseMs=200`, `RatioFallos=0.5`, `VentanaSegundos=30`, `MinimoLlamadas=5`, `PausaSegundos=15`, `TimeoutTotalSegundos=12` | igual |
+
+El evento de creación se guarda con el reporte en la tabla `MensajesOutbox` y lo entrega en segundo plano `DespachadorOutbox`: un fallo del bus no hace fallar la creación. Las llamadas a Geoespacial y Multimedia tienen reintentos y circuit breaker. Detalle en [docs/funcionamiento.md](docs/funcionamiento.md) («Entrega de eventos» y «Dependencias externas»).
 
 Cada petición deja una línea de log con método, ruta, código y duración (`HttpLogging`), sin cabeceras ni cuerpos.
 
@@ -76,7 +80,7 @@ Cada petición deja una línea de log con método, ruta, código y duración (`H
 }
 ```
 
-Bus `arn:aws:events:us-east-2:348364742283:event-bus/urban-alert-bus-eventos` (creado a mano; ningún repo lo gestiona). Las reglas y destinos (Auditoria) se configuran fuera de este repo. Una entrada rechazada por EventBridge cuenta como fallo de publicación, como hoy un fallo de RabbitMQ.
+Bus `arn:aws:events:us-east-2:348364742283:event-bus/urban-alert-bus-eventos` (creado a mano; ningún repo lo gestiona). Las reglas y destinos (Auditoria) se configuran fuera de este repo. Una entrada rechazada por EventBridge cuenta como fallo de publicación, igual que un fallo de RabbitMQ: el outbox la reintenta y, tras `Outbox:MaxIntentos`, la deja como `FALLIDO`.
 
 ### Migración
 

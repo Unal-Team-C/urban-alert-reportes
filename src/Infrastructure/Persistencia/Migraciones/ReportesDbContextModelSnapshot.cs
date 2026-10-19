@@ -86,6 +86,52 @@ namespace Infrastructure.Persistencia.Migraciones
 
                     b.ToTable("Reportes", (string)null);
                 });
+
+            modelBuilder.Entity("Infrastructure.Mensajeria.Outbox.MensajeOutbox", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Contenido")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime?>("EntregadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("Intentos")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime>("ProximoIntento")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("RegistradoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("UltimoError")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProximoIntento")
+                        .HasDatabaseName("IX_MensajesOutbox_Pendientes")
+                        .HasFilter("\"Estado\" = 'PENDIENTE'");
+
+                    b.ToTable("MensajesOutbox", (string)null);
+                });
 #pragma warning restore 612, 618
         }
     }

@@ -1,10 +1,13 @@
+using Application.Interfaces.Eventos;
 using Domain.Reportes;
 
 namespace Application.Interfaces.Reportes;
 
 public interface IReporteRepository
 {
-    Task AgregarAsync(Reporte reporte, CancellationToken cancellationToken);
+    // Guarda el reporte y su evento de creación en la misma transacción: o quedan ambos o ninguno
+    // (spec 002 RF-001). El evento lo entrega después el despachador del outbox.
+    Task AgregarAsync(Reporte reporte, IEventoDominio eventoCreacion, CancellationToken cancellationToken);
 
     Task<Reporte?> ObtenerPorIdAsync(Guid id, CancellationToken cancellationToken);
 

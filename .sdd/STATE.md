@@ -3,27 +3,30 @@
 <!-- Puntero de reanudación. Claude lo actualiza en CADA transición (inicio/fin de tarea, cambio de fase, decisión, bloqueo).
      Editar este archivo = checkpoint (lo registra el hook). Mantenlo corto: el detalle va en specs/ y journal.md.
      fase: constitution | specify | clarify | plan | tasks | implement | verify | done
-     estado_tarea: bloqueada
+     estado_tarea: - -->
 
-feature_activa: 001-migracion-aws
-fase: implement
-tarea_actual: T032
-estado_tarea: bloqueada
+feature_activa: 002-resiliencia-eventos
+fase: done
+tarea_actual: -
+estado_tarea: -
 
 ## Siguiente paso
 
-T032: segundo Provision sin cambios de infraestructura (lo dispara el merge de este registro, rama verify/primer-provision); esperar 0 cambios en base/routes y solo imagen/task definition/servicio por el SHA nuevo. Después /sdd-verify (crear-reporte-prueba completo cuando Multimedia vuelva).
+Feature 002 cerrada en local (verify.md ✅). Pendiente del usuario: push de la rama 002-resiliencia-eventos y PR a main (CI + Provision aplican la migración AgregarOutbox). Después: /sdd-switch 001-migracion-aws (T032 bloqueada) o /sdd-new para la siguiente.
 
 ## Contexto de trabajo
 
-- iCloud Drive crea copias "archivo 2.ext" en el repo (conflictos de sincronización): rompen el build .NET (tipos duplicados). Ignoradas en .gitignore; las halladas se movieron al scratchpad (duplicados-icloud).
-- Referencias: `../Microservicio usuarios` (spec 001, infra/{base,service,routes}, scripts, workflows: el más parecido), `../Microservicio geoespacial AWS`, `../FaaS multimedia/Urban-Alert-multimedia` (infra/rutas), `../Plataforma compartida AWS` (docs/integracion.md).
-- Geoespacial: `POST /api/v1/geoespacial/coordinates` es AWS_IAM (Reportes firma). Multimedia: `POST /api/v1/multimedia/images` pública (AWS_PROXY 2.0).
-- Bus de EventBridge creado a mano, en ningún repo (dicho por el usuario). No hay AWS CLI local para inspeccionarlo.
-- Auditoria (github Unal-Team-C/urban-alert-auditoria) aún consume por MassTransit/RabbitMQ; clon de lectura en el scratchpad de la sesión.
+- 001-migracion-aws aparcada (T032 bloqueada): contexto en specs/001-migracion-aws/notes.md §Aparcado 2026-10-19.
+- Geoespacial es idempotente por reportId (201 nueva, 200 repetición idéntica, 409 otra coordenada): reintentar es seguro.
+- Multimedia POST images no es idempotente: un reintento tras timeout puede duplicar la imagen.
+- Auditoría deduplica por event_id (AuditStore busca event_id antes de insertar): soporta entrega al menos una vez.
+- Hoy CrearReporteHandler: guarda → PutEvents; si PutEvents falla, el cliente recibe error aunque el reporte quedó creado.
+- Migración local: red Podman `sdd002` + contenedor `sdd002-pg` (postgres:16, admin/admin-local-only, base reportes); `--migrar` con `-e Migracion__*` en array zsh (`"${M[@]}"`) y `Migracion__SslMode=Disable`.
+- dotnet-ef 10.0.4 en `/tmp/tools` del contenedor; necesita `ConnectionStrings__Postgres`, `Geoespacial__BaseUrl`, `Multimedia__BaseUrl`, `RabbitMq__Host` de relleno.
+- IT local: `scratchpad/it.sh [filtro]` (contenedores `sdd002-pg` y `sdd002-rmq` ci/ci-only en la red `sdd002`); base ya migrada con --migrar.
+- `--migrar` no construye el host web: el despachador no corre ahí.
 - Hooks del arnés usan `powershell` (no instalado en este Mac): el protocolo se sigue a mano.
 
 ## Bloqueos / preguntas abiertas
 
-- Multimedia responde 503 directamente por el gateway (también GET metadata): su backend (DocumentDB) no está disponible. Fuera de este repo; bloquea solo la parte de imagen de MS-002.
-- T032 necesita un push a main (merge de verify/primer-provision).
+- (ninguno)

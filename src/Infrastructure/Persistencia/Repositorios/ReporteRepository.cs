@@ -1,14 +1,18 @@
+using Application.Interfaces.Eventos;
 using Application.Interfaces.Reportes;
 using Domain.Reportes;
+using Infrastructure.Mensajeria.Outbox;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistencia.Repositorios;
 
-public class ReporteRepository(ReportesDbContext dbContext) : IReporteRepository
+public class ReporteRepository(ReportesDbContext dbContext, TimeProvider reloj) : IReporteRepository
 {
-    public async Task AgregarAsync(Reporte reporte, CancellationToken cancellationToken)
+    public async Task AgregarAsync(Reporte reporte, IEventoDominio eventoCreacion, CancellationToken cancellationToken)
     {
         await dbContext.Reportes.AddAsync(reporte, cancellationToken);
+        await dbContext.MensajesOutbox.AddAsync(MensajeOutbox.Crear(eventoCreacion, reloj.GetUtcNow().UtcDateTime), cancellationToken);
+        // Un solo SaveChanges = una transacción con los dos INSERT.
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 

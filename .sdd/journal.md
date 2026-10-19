@@ -129,3 +129,84 @@
 - base: 3 reemplazados (random_password, versión del secreto, task definition de migración: rotación); imagen reutilizada (mismo SHA? no: tag del merge #2 ya existía por el run fallido? → "already exists"); migración: 0 pendientes (el run fallido ya había migrado antes del error del rol) y rol sincronizado; service +1; routes +4; humo 9/9 (primer intento 404 mientras se propagaban las rutas).
 - crear-reporte-prueba.sh: JSON 201 con idCoordenada de Geoespacial (firma SigV4 OK) y PutEvents sin error; DELETE 204. Multipart 503: Multimedia devuelve 503 también llamado directamente (POST images y GET metadata) → problema de Multimedia, no de Reportes; Reportes lo traduce bien (503 MultimediaNoDisponible).
 - Corrección de la entrada anterior: la imagen sí se construyó y publicó con el SHA d75ef71 (solo se reutilizaron capas); la línea "already exists" era el texto del script, no su ejecución.
+
+## 2026-10-19 · general · Cambio de feature 001-migracion-aws → 002-resiliencia-eventos
+- 001 aparcada en implement (T032 bloqueada); contexto en specs/001-migracion-aws/notes.md §Aparcado 2026-10-19. Rama 002-resiliencia-eventos desde origin/main c5f09ab.
+
+## 2026-10-19 · 002-resiliencia-eventos · Creada spec desde descripción
+- Debilidades 3 (sin outbox: reporte guardado sin evento) y 4 (Geoespacial/Multimedia solo con timeout) del análisis de QAS-02 y QAS-04.1. HU-1 entrega garantizada del evento (P1), HU-2 reintentos ante fallos transitorios (P1), HU-3 circuito con fallo rápido (P2). 13 RF, 6 RNF.
+- 1 [NEEDS CLARIFICATION]: política de reintento de Multimedia (su subida no es idempotente).
+
+## 2026-10-19 · 002-resiliencia-eventos · Spec aclarada y aprobada
+- RF-007 Multimedia: reintento solo si la conexión no se estableció; timeout/5xx sin reintento; circuito sí. Usuario aprueba la spec.
+
+## 2026-10-19 · 002-resiliencia-eventos · plan.md y tasks.md generados
+- D-001 outbox propio (no MassTransit: en AWS no hay MassTransit); D-002 atomicidad en IReporteRepository.AgregarAsync(reporte, evento); D-003 IEventPublisher no genérico; D-004 Microsoft.Extensions.Http.Resilience 10.10.0 (10.11.0 tiene 5 días); D-005 Multimedia reintenta solo ConnectionError/NameResolutionError; D-006 presupuesto ≈ 22 s < 25 s; D-007 transacción por lote con SKIP LOCKED.
+- 12 tareas: preparación 1, outbox 6, resiliencia 3, pulido 2. Sin cambios de Terraform.
+
+## 2026-10-19 · 002-resiliencia-eventos · Plan y tareas aprobados
+- El usuario aprueba plan.md y tasks.md; empieza la implementación por T001.
+
+## 2026-10-19 · 002-resiliencia-eventos · T001 hecha
+- Microsoft.Extensions.Http.Resilience 10.10.0 sin conflicto con Microsoft.Extensions.Http 10.0.12 (no hizo falta subirlo). Build 0 errores/0 advertencias; UnitTests 86/86.
+
+## 2026-10-19 · 002-resiliencia-eventos · T002 hecha
+- IEventPublisher.PublicarAsync(object, ct). EventBridge: DetailType y Serialize con evento.GetType(); cliente con Timeout 5 s y MaxErrorRetry 2 (D-007). MassTransit: Publish(evento, evento.GetType()).
+- Prueba nueva de no regresión (object vs tipado: mismo DetailType/Source/Detail); la de formato del Detail sigue pasando. UnitTests 87/87; solución compila.
+
+## 2026-10-19 · 002-resiliencia-eventos · T003 hecha
+- MensajeOutbox (Crear/MarcarEntregado/RegistrarFallo con backoff min(2^n s, 5 min) y FALLIDO en maxIntentos; error recortado a 2000), EstadoMensajeOutbox con CodigoEnumConverter, configuración (jsonb, índice parcial IX_MensajesOutbox_Pendientes), DbSet.
+- SerializacionEventos (opciones Web + códigos, tipos conocidos sin reflexión); EventBridgeEventPublisher reutiliza sus opciones.
+- Desviación registrada en plan D-002: IEventoDominio { IdEvento } en lugar de object.
+- UnitTests 95/95.
+
+## 2026-10-19 · 002-resiliencia-eventos · T004 hecha
+- Migración 20261019150110_AgregarOutbox (dotnet-ef 10.0.4): tabla MensajesOutbox + IX_MensajesOutbox_Pendientes (parcial PENDIENTE). Down: DropTable.
+- Verificado: --migrar sobre base vacía aplicó 7 migraciones y sincronizó reportes_app (INSERT/UPDATE/SELECT sobre MensajesOutbox = t); segunda ejecución: 0 pendientes.
+
+## 2026-10-19 · 002-resiliencia-eventos · T005 hecha
+- IReporteRepository.AgregarAsync(reporte, IEventoDominio, ct): Add reporte + MensajeOutbox.Crear(evento, TimeProvider) y un SaveChanges. TimeProvider.System registrado con TryAdd. CrearReporteHandler ya no depende de IEventPublisher.
+- Unitarias: RepositorioFalso guarda eventos; prueba nueva de fallo del guardado sin reporte ni evento. 96/96.
+- IT nuevas (OutboxGuardadoTests): POST deja la fila ReporteCreadoEvent del reporte; Id duplicado → DbUpdateException y ninguna fila del segundo evento. IT 79/79 en local (Podman).
+
+## 2026-10-19 · 002-resiliencia-eventos · T006 hecha
+- DespachadorOutbox (BackgroundService): vuelta cada IntervaloMs con Task.Delay(TimeProvider); lote FromSql parametrizado ... FOR UPDATE SKIP LOCKED en transacción; publica por IEventPublisher del scope con tope TimeoutPublicacionSegundos; MarcarEntregado / RegistrarFallo (Warning; Error al quedar FALLIDO, RF-013); sigue sin esperar si el lote viene lleno.
+- OutboxOpciones.Desde(config) con validación; DespachadorOutbox singleton + AddHostedService si Habilitado; appsettings Outbox:*.
+- Build 0/0; IT 79/79 con el despachador activo: 25 eventos ENTREGADO contra RabbitMQ real en la corrida.
+
+## 2026-10-19 · 002-resiliencia-eventos · T007 hecha
+- tests/IntegrationTests/Mensajeria: OutboxApiFactory (Outbox:Habilitado=false, MaxIntentos=3, PublicadorControlable, RelojControlable, LogsCapturados) y colección Outbox sin paralelismo.
+- DespachadorOutboxTests: bus caído → 201, PENDIENTE con Intentos=1 y UltimoError, sin reintento antes del backoff, ENTREGADO al recuperarse (publicado 1 vez); FALLIDO tras 3 intentos sin bloquear al sano y log Error (RF-013); 2 despachadores concurrentes con 30 eventos → cada uno publicado exactamente una vez (SKIP LOCKED).
+- DespachadorEnSegundoPlanoTests: host real + RabbitMQ, entregado en < 5 s (RNF-001).
+- IT 83/83 tres corridas seguidas.
+
+## 2026-10-19 · 002-resiliencia-eventos · T008 hecha
+- src/Infrastructure/Resiliencia/PoliticasHttp.cs: ResilienciaOpciones (Resiliencia:<dep>:*, valores de la spec, TimeoutTotalSegundos 12) y AgregarResiliencia{Geoespacial,Multimedia}: Retry (exponencial, jitter, 200 ms, ShouldRetryAfterHeader=false) → CircuitBreaker (50 %/30 s/mín. 5/15 s) → Timeout por intento. Multimedia: ShouldHandle del retry = solo HttpRequestError.ConnectionError/NameResolutionError.
+- DI: pipeline antes del AwsSignatureHandler (se firma en cada intento); HttpClient.Timeout = tope total. appsettings Resiliencia:*.
+- Build 0/0.
+
+## 2026-10-19 · 002-resiliencia-eventos · T009 hecha
+- GeoespacialHttpClient y MultimediaHttpClient: TimeoutRejectedException → 'no respondió a tiempo' y BrokenCircuitException → 'no disponible (circuito abierto)', ambas como excepciones de no disponible (503 por el middleware).
+- Build 0/0; UnitTests 96/96; IT 83/83. El comportamiento extremo a extremo lo prueba T010.
+
+## 2026-10-19 · 002-resiliencia-eventos · T010 hecha
+- tests/UnitTests/Infrastructure/PoliticasHttpTests.cs (11 casos, DI real + servidor y reloj falsos): Geoespacial reintenta 503 y tiene éxito; agota 2 reintentos (3 llamadas); 400 y 409 sin reintento; firma SigV4 en cada intento; circuito abre tras 5 fallos y responde 'circuito abierto' en < 50 ms sin llamar; half-open a los 15 s (reloj falso: Polly usa el TimeProvider de la DI) y cierra; Multimedia reintenta ConnectionError, no 503 ni timeout (timeout por intento configurable, 1 s); circuito de Geoespacial no afecta a Multimedia.
+- Hallazgo y corrección: Polly exige MaxRetryAttempts ≥ 1 (ValidationException con Reintentos=0): ahora Reintentos=0 omite la estrategia; ResilienciaOpciones valida rangos.
+- RF-013 en dependencias: logs de reintento/circuito por la telemetría de Microsoft.Extensions.Resilience (no se aserta).
+- UnitTests 107/107; IT 83/83.
+
+## 2026-10-19 · 002-resiliencia-eventos · T011 hecha
+- docs/funcionamiento.md: flujo de creación con guardado atómico; sección «Entrega de eventos (outbox)» (despachador, estados, backoff, SKIP LOCKED, al menos una vez, consultas SQL); resiliencia de Geoespacial/Multimedia; brecha del outbox sustituida por saga y FALLIDO sin reproceso/alarmas.
+- README: claves Outbox:* y Resiliencia:* en la tabla de configuración; EventBridge rechazado → reintento del outbox; specs 001 y 002. CLAUDE.md: gotchas de outbox, Polly MaxRetryAttempts y colección sin paralelismo.
+- Revisión cruzada: todas las claves de appsettings Outbox/Resiliencia aparecen en docs y en el código.
+
+## 2026-10-19 · 002-resiliencia-eventos · T012 hecha
+- Base nueva + --migrar (7 migraciones) + IT 83/83; build Release 0/0; UnitTests Release 107/107.
+- git diff origin/main: 0 líneas en infra/ y .github/ (RNF-006, sin Terraform); 40 archivos. Sin credenciales nuevas (solo AKIDEXAMPLE y valores de relleno ya usados en las pruebas).
+- Pendiente fuera de local: job test de CI y despliegue (Provision) al hacer merge.
+
+## 2026-10-19 · 002-resiliencia-eventos · T013 hecha
+- PoliticasHttpTests.LosReintentosYLaAperturaDelCircuitoQuedanEnElLog: con un ILoggerProvider de captura, la telemetría de Microsoft.Extensions.Resilience registra OnRetry y OnCircuitOpened. UnitTests 108/108.
+
+## 2026-10-19 · 002-resiliencia-eventos · Verificación ✅
+- verify.md: build Release 0/0, UnitTests 108/108, IT 83/83 (3 corridas), base nueva + --migrar OK, sin cambios en infra/.github. Todos los RF/RNF con evidencia; HU-1.3/MS-002 por equivalencia (sin reinicio real). Corrección T013 añadida y hecha durante la verificación. Spec → implementada; fase done. CI/Provision pendientes del merge.

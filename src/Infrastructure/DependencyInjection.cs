@@ -11,13 +11,16 @@ using Application.Interfaces.Multimedia;
 using Application.Interfaces.Reportes;
 using Infrastructure.Geoespacial;
 using Infrastructure.Mensajeria;
+using Infrastructure.Mensajeria.Outbox;
 using Infrastructure.Multimedia;
 using Infrastructure.Persistencia;
 using Infrastructure.Persistencia.Repositorios;
+using Infrastructure.Resiliencia;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Infrastructure;
 
@@ -30,11 +33,13 @@ public static class DependencyInjection
 
         services.AddDbContext<ReportesDbContext>(options => options.UseNpgsql(connectionString));
 
+        services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IReporteRepository, ReporteRepository>();
 
         AgregarGeoespacial(services, configuration);
         AgregarMultimedia(services, configuration);
         AgregarMensajeria(services, configuration);
+        AgregarOutbox(services, configuration);
 
         return services;
     }
@@ -45,17 +50,20 @@ public static class DependencyInjection
         if (string.IsNullOrWhiteSpace(baseUrl))
             throw new InvalidOperationException("No se encontró la configuración 'Geoespacial:BaseUrl'.");
 
-        // Timeout corto: la llamada es síncrona dentro de la creación del reporte.
+        // Timeout corto por intento: la llamada es síncrona dentro de la creación del reporte.
         int timeoutSegundos = configuration.GetValue<int?>("Geoespacial:TimeoutSegundos") ?? 3;
+        ResilienciaOpciones resiliencia = ResilienciaOpciones.Desde(configuration, "Geoespacial");
 
         string ruta = configuration["Geoespacial:RutaCoordenadas"] is { Length: > 0 } r ? r.TrimStart('/') : GeoespacialOpciones.RutaPorDefecto;
         services.AddSingleton(new GeoespacialOpciones(ruta));
 
+        // HttpClient.Timeout es el tope total con reintentos; el de cada intento lo pone el pipeline (spec 002 RNF-003).
         IHttpClientBuilder cliente = services.AddHttpClient<IGeoespacialClient, GeoespacialHttpClient>(client =>
         {
             client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
-            client.Timeout = TimeSpan.FromSeconds(timeoutSegundos);
+            client.Timeout = TimeSpan.FromSeconds(resiliencia.TimeoutTotalSegundos);
         });
+        cliente.AgregarResilienciaGeoespacial(resiliencia, TimeSpan.FromSeconds(timeoutSegundos));
 
         // En AWS la ruta de asignación del API Gateway exige firma IAM (SigV4) con el rol de tarea.
         string? regionFirma = configuration["Geoespacial:FirmaIam:Region"];
@@ -75,8 +83,9 @@ public static class DependencyInjection
         if (string.IsNullOrWhiteSpace(baseUrl))
             throw new InvalidOperationException("No se encontró la configuración 'Multimedia:BaseUrl'.");
 
-        // Timeout más alto que Geoespacial: incluye subir el archivo, no solo una consulta.
+        // Timeout por intento más alto que Geoespacial: incluye subir el archivo, no solo una consulta.
         int timeoutSegundos = configuration.GetValue<int?>("Multimedia:TimeoutSegundos") ?? 10;
+        ResilienciaOpciones resiliencia = ResilienciaOpciones.Desde(configuration, "Multimedia");
 
         string modo = configuration["Multimedia:Modo"] ?? nameof(ModoMultimedia.Emulador);
         if (!Enum.TryParse(modo, ignoreCase: true, out ModoMultimedia modoMultimedia))
@@ -84,10 +93,21 @@ public static class DependencyInjection
         services.AddSingleton(new MultimediaOpciones(modoMultimedia));
 
         services.AddHttpClient<IMultimediaClient, MultimediaHttpClient>(client =>
-        {
-            client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
-            client.Timeout = TimeSpan.FromSeconds(timeoutSegundos);
-        });
+            {
+                client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+                client.Timeout = TimeSpan.FromSeconds(resiliencia.TimeoutTotalSegundos);
+            })
+            .AgregarResilienciaMultimedia(resiliencia, TimeSpan.FromSeconds(timeoutSegundos));
+    }
+
+    // Despachador del outbox (spec 002): entrega en segundo plano los eventos guardados con cada reporte.
+    private static void AgregarOutbox(IServiceCollection services, IConfiguration configuration)
+    {
+        OutboxOpciones opciones = OutboxOpciones.Desde(configuration);
+        services.AddSingleton(opciones);
+        services.AddSingleton<DespachadorOutbox>();
+        if (opciones.Habilitado)
+            services.AddHostedService(sp => sp.GetRequiredService<DespachadorOutbox>());
     }
 
     // RabbitMq (local, por defecto) o EventBridge (AWS). Con EventBridge no se registra MassTransit.
@@ -112,7 +132,8 @@ public static class DependencyInjection
         // Región de AWS_REGION (variable de entorno o configuración); credenciales de la cadena por defecto
         // del SDK (rol de tarea en ECS), salvo que haya unas registradas (pruebas).
         string? region = configuration["AWS_REGION"];
-        AmazonEventBridgeConfig configEventBridge = new();
+        // Timeout corto: el despachador del outbox publica dentro de una transacción por lote (plan D-007).
+        AmazonEventBridgeConfig configEventBridge = new() { Timeout = TimeSpan.FromSeconds(5), MaxErrorRetry = 2 };
         if (!string.IsNullOrWhiteSpace(region))
             configEventBridge.RegionEndpoint = RegionEndpoint.GetBySystemName(region);
 

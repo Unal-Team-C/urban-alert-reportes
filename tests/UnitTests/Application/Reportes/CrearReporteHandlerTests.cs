@@ -17,9 +17,8 @@ public class CrearReporteHandlerTests
     private readonly RepositorioFalso _repositorio = new();
     private readonly GeoespacialFalso _geoespacial = new();
     private readonly MultimediaFalso _multimedia = new();
-    private readonly PublicadorFalso _publicador = new();
 
-    private CrearReporteHandler CrearHandler() => new(_repositorio, _geoespacial, _multimedia, _publicador);
+    private CrearReporteHandler CrearHandler() => new(_repositorio, _geoespacial, _multimedia);
 
     private static CrearReporteCommand ComandoValido() => new(
         CategoriaReporte.ViasYAndenes,
@@ -49,9 +48,20 @@ public class CrearReporteHandlerTests
     {
         Guid idReporte = await CrearHandler().Handle(ComandoValido(), CancellationToken.None);
 
-        ReporteCreadoEvent evento = Assert.IsType<ReporteCreadoEvent>(Assert.Single(_publicador.Eventos));
+        ReporteCreadoEvent evento = Assert.IsType<ReporteCreadoEvent>(Assert.Single(_repositorio.Eventos));
         Assert.Equal(idReporte, evento.Reporte.Id);
         Assert.Equal(_geoespacial.IdCoordenadaDevuelto, evento.Reporte.IdCoordenada);
+    }
+
+    [Fact]
+    public async Task Handle_PropagaElFalloDelGuardado_SinDejarReporteNiEvento()
+    {
+        _repositorio.ExcepcionALanzar = new InvalidOperationException("base no disponible");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => CrearHandler().Handle(ComandoValido(), CancellationToken.None));
+
+        Assert.Empty(_repositorio.Agregados);
+        Assert.Empty(_repositorio.Eventos);
     }
 
     [Fact]
@@ -73,7 +83,7 @@ public class CrearReporteHandlerTests
         await CrearHandler().Handle(ComandoValido() with { IdUsuario = idUsuario }, CancellationToken.None);
 
         Assert.Equal(idUsuario, Assert.Single(_repositorio.Agregados).IdUsuario);
-        ReporteCreadoEvent evento = Assert.IsType<ReporteCreadoEvent>(Assert.Single(_publicador.Eventos));
+        ReporteCreadoEvent evento = Assert.IsType<ReporteCreadoEvent>(Assert.Single(_repositorio.Eventos));
         Assert.Equal(idUsuario, evento.Reporte.IdUsuario);
     }
 
@@ -147,7 +157,7 @@ public class CrearReporteHandlerTests
 
         Assert.Empty(_geoespacial.Llamadas);
         Assert.Empty(_repositorio.Agregados);
-        Assert.Empty(_publicador.Eventos);
+        Assert.Empty(_repositorio.Eventos);
     }
 
     [Fact]
@@ -175,7 +185,7 @@ public class CrearReporteHandlerTests
             () => CrearHandler().Handle(ComandoValido(), CancellationToken.None));
 
         Assert.Empty(_repositorio.Agregados);
-        Assert.Empty(_publicador.Eventos);
+        Assert.Empty(_repositorio.Eventos);
     }
 
     [Fact]
@@ -187,7 +197,7 @@ public class CrearReporteHandlerTests
             () => CrearHandler().Handle(ComandoValido(), CancellationToken.None));
 
         Assert.Empty(_repositorio.Agregados);
-        Assert.Empty(_publicador.Eventos);
+        Assert.Empty(_repositorio.Eventos);
     }
 
     private sealed class GeoespacialFalso : IGeoespacialClient
@@ -223,10 +233,16 @@ public class CrearReporteHandlerTests
     private sealed class RepositorioFalso : IReporteRepository
     {
         public List<Reporte> Agregados { get; } = [];
+        public List<object> Eventos { get; } = [];
+        public Exception? ExcepcionALanzar { get; set; }
 
-        public Task AgregarAsync(Reporte reporte, CancellationToken cancellationToken)
+        public Task AgregarAsync(Reporte reporte, IEventoDominio eventoCreacion, CancellationToken cancellationToken)
         {
+            if (ExcepcionALanzar is not null)
+                throw ExcepcionALanzar;
+
             Agregados.Add(reporte);
+            Eventos.Add(eventoCreacion);
             return Task.CompletedTask;
         }
 
@@ -239,16 +255,5 @@ public class CrearReporteHandlerTests
         public Task ActualizarAsync(Reporte reporte, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task EliminarAsync(Reporte reporte, CancellationToken cancellationToken) => throw new NotSupportedException();
-    }
-
-    private sealed class PublicadorFalso : IEventPublisher
-    {
-        public List<object> Eventos { get; } = [];
-
-        public Task PublicarAsync<TEvento>(TEvento evento, CancellationToken cancellationToken) where TEvento : class
-        {
-            Eventos.Add(evento);
-            return Task.CompletedTask;
-        }
     }
 }
