@@ -7,12 +7,12 @@
 
 feature_activa: 003-captcha-creacion
 fase: implement
-tarea_actual: T006
-estado_tarea: -
+tarea_actual: -
+estado_tarea: hecha
 
 ## Siguiente paso
 
-T006: comprobación completa (base nueva + --migrar + IT, unitarias Release, Terraform de los tres stacks, diff sin .github).
+Escribir verify.md de 003 y cerrar; después implementar 004 en urban-alert-web.
 
 ## Contexto de trabajo
 

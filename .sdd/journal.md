@@ -244,3 +244,6 @@
 - infra/bootstrap/README.md §5: crear el widget en Cloudflare (dominios CloudFront + localhost), crear/rotar el secreto {clave_secreta} sin dejarlo en el historial, orden de activación (portal primero) y permisos existentes.
 - README: claves Captcha:* y Resiliencia:Captcha, comportamiento 400/503, claves de prueba de Cloudflare; coste (+0,4 USD con captcha, Turnstile 0). docs/funcionamiento.md: sección Verificación humana, flujo de creación y brecha de rutas de modificación. CLAUDE.md: gotchas.
 - Revisión cruzada: todas las claves Captcha:* y las variables captcha_* documentadas.
+
+## 2026-10-19 · 003-captcha-creacion · T006 hecha
+- Base nueva + --migrar (7) + IT 89/89; build Release 0/0; UnitTests Release 131/131; Terraform base 13/13, service 9/9, routes 7/7, fmt limpio; .github sin cambios; sin credenciales nuevas en el diff (solo claves de prueba públicas de Cloudflare).
