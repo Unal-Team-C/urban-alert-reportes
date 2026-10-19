@@ -207,3 +207,6 @@
 
 ## 2026-10-19 · 002-resiliencia-eventos · T013 hecha
 - PoliticasHttpTests.LosReintentosYLaAperturaDelCircuitoQuedanEnElLog: con un ILoggerProvider de captura, la telemetría de Microsoft.Extensions.Resilience registra OnRetry y OnCircuitOpened. UnitTests 108/108.
+
+## 2026-10-19 · 002-resiliencia-eventos · Verificación ✅
+- verify.md: build Release 0/0, UnitTests 108/108, IT 83/83 (3 corridas), base nueva + --migrar OK, sin cambios en infra/.github. Todos los RF/RNF con evidencia; HU-1.3/MS-002 por equivalencia (sin reinicio real). Corrección T013 añadida y hecha durante la verificación. Spec → implementada; fase done. CI/Provision pendientes del merge.

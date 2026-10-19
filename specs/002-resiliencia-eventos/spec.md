@@ -1,7 +1,7 @@
 # Especificación: Entrega garantizada del evento de creación y resiliencia ante dependencias
 
 - **ID**: 002-resiliencia-eventos
-- **Estado**: aprobada <!-- borrador | aclarada | aprobada | implementada -->
+- **Estado**: implementada <!-- borrador | aclarada | aprobada | implementada -->
 - **Creada**: 2026-10-19
 - **Entrada original**: "Hagamos 3 y 4 de momento, usa los arneses", sobre el análisis de puntos débiles de la implementación en AWS: (3) "Sin outbox transaccional: un reporte puede quedar creado en PostgreSQL sin que su evento llegue a publicarse si el proceso falla entre el guardado y el publish" (docs/funcionamiento.md §Brechas conocidas) y (4) "Llamadas síncronas a Geoespacial (timeout 3 s) y Multimedia (10 s) solo con timeout: sin reintentos ni circuit breaker". Escenarios de calidad afectados: QAS-02 (resiliencia) y QAS-04.1 (0 eventos perdidos) de delivery4-team-C.
 

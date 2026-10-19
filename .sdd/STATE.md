@@ -6,13 +6,13 @@
      estado_tarea: - -->
 
 feature_activa: 002-resiliencia-eventos
-fase: implement
+fase: done
 tarea_actual: -
-estado_tarea: hecha
+estado_tarea: -
 
 ## Siguiente paso
 
-Escribir specs/002-resiliencia-eventos/verify.md y cerrar la feature.
+Feature 002 cerrada en local (verify.md ✅). Pendiente del usuario: push de la rama 002-resiliencia-eventos y PR a main (CI + Provision aplican la migración AgregarOutbox). Después: /sdd-switch 001-migracion-aws (T032 bloqueada) o /sdd-new para la siguiente.
 
 ## Contexto de trabajo
 
