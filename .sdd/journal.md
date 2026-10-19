@@ -230,3 +230,7 @@
 ## 2026-10-19 · 003-captcha-creacion · T002 hecha
 - CaptchaOpciones (Captcha:*; no arranca si Habilitado sin ClaveSecreta), VerificadorDesactivado, VerificadorTurnstile (form-urlencoded secret/response; vacío o > 2048 sin red; success=false → inválido con error-codes; invalid-input-secret/missing-input-secret/internal-error, HTTP no 2xx, JSON ilegible, red, timeout y circuito → no disponible; hostname y acción si están configurados; logs sin token ni secreto), PoliticasHttp.AgregarResilienciaCaptcha (solo sin conexión), DI y appsettings Captcha + Resiliencia:Captcha.
 - 19 UT nuevas en VerificadorTurnstileTests (incl. circuito < 50 ms, 3 intentos solo sin conexión, 1 intento con 500). UnitTests 131/131.
+
+## 2026-10-19 · 003-captcha-creacion · T003 hecha
+- captchaToken opcional en CrearReporteRequest y CrearReporteConImagenRequest; el controlador lo pasa al comando; descripciones OpenAPI actualizadas. Middleware: CaptchaInvalidoException → 400 (mensaje genérico, el motivo solo en el log), CaptchaNoDisponibleException → 503.
+- IT CaptchaEndpointsTests (CaptchaApiFactory con Captcha:Habilitado=true y verificador controlable): JSON válido 201, sin token/falso 400 con mensaje, multipart válido 201, multipart sin token 400, proveedor caído 503. Las 83 anteriores (desactivado) sin cambios: IT 89/89.

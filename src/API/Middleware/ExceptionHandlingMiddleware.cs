@@ -1,4 +1,5 @@
 using System.Net;
+using Application.Captcha;
 using Application.Geoespacial;
 using Application.Multimedia;
 using Domain.Reportes;
@@ -18,6 +19,18 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         {
             context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
             await context.Response.WriteAsJsonAsync(new { message = ex.Message });
+        }
+        catch (CaptchaInvalidoException)
+        {
+            // El motivo ya quedó en el log del verificador; al cliente no se le da detalle (spec 003 RF-003).
+            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            await context.Response.WriteAsJsonAsync(new { message = "No se pudo verificar que la solicitud la hizo una persona. Repite la verificación." });
+        }
+        catch (CaptchaNoDisponibleException ex)
+        {
+            logger.LogWarning(ex, "No fue posible verificar la prueba humana con el proveedor.");
+            context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+            await context.Response.WriteAsJsonAsync(new { message = "No fue posible verificar la solicitud. Intenta nuevamente más tarde." });
         }
         catch (GeoespacialNoDisponibleException ex)
         {

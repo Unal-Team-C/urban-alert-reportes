@@ -7,12 +7,12 @@
 
 feature_activa: 003-captcha-creacion
 fase: implement
-tarea_actual: T003
+tarea_actual: T004
 estado_tarea: -
 
 ## Siguiente paso
 
-T003: captchaToken en los DTO y el controlador; middleware 400/503; IT CaptchaEndpointsTests.
+T004: variables captcha_* en infra/service, data del secreto de arranque y bloque secret/variables condicionales; dos run en service.tftest.hcl.
 
 ## Contexto de trabajo
 

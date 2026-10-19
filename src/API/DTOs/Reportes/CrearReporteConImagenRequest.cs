@@ -10,4 +10,6 @@ public record CrearReporteConImagenRequest(
     double Latitud,
     double Longitud,
     IFormFile Imagen,
-    Guid? IdUsuario = null);
+    Guid? IdUsuario = null,
+    // Prueba de verificación humana del portal (spec 003); obligatoria solo si Captcha:Habilitado.
+    string? CaptchaToken = null);
